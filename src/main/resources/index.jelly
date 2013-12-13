@@ -1,0 +1,6 @@
+<!--
+  This view is used to render the installed plugins page.
+-->
+<div>
+  Package and deploy your applications from Jenkins with <a href='http://www.xebialabs.com'>XebiaLabs XL Release</a>.
+</div>

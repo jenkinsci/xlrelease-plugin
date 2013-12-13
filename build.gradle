@@ -1,0 +1,116 @@
+/**
+ * Copyright (c) 2013, XebiaLabs B.V., All rights reserved.
+ *
+ *
+ * The XL Release plugin for Jenkins is licensed under the terms of the GPLv2
+ * <http://www.gnu.org/licenses/old-licenses/gpl-2.0.html>, like most XebiaLabs Libraries.
+ * There are special exceptions to the terms and conditions of the GPLv2 as it is applied to
+ * this software, see the FLOSS License Exception
+ * <https://github.com/jenkinsci/xlrelease-plugin/blob/master/LICENSE>.
+ *
+ * This program is free software; you can redistribute it and/or modify it under the terms
+ * of the GNU General Public License as published by the Free Software Foundation; version 2
+ * of the License.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along with this
+ * program; if not, write to the Free Software Foundation, Inc., 51 Franklin St, Fifth
+ * Floor, Boston, MA 02110-1301  USA
+ */
+
+group = "com.xebialabs.ci.ci"
+version = "3.9.6-SNAPSHOT"
+description = "Package and deploy your applications from Jenkins with &lt;a href='http://www.xebialabs.com'&gt;XebiaLabs XL Release&lt;/a&gt;."
+
+apply plugin: 'eclipse'
+apply plugin: 'idea'
+apply plugin: 'java'
+apply plugin: 'jpi'
+
+build.dependsOn jpi
+
+task deleteGeneratedSrcLocalizer(type:Delete) {
+    delete "build/generated-src/localizer"
+}
+
+localizer.dependsOn deleteGeneratedSrcLocalizer
+
+repositories {
+    mavenCentral()
+    maven {
+        url "${projectDir}/repo"
+    }
+}
+
+buildscript {
+    repositories {
+        maven {
+            name "jenkins"
+            delegate.url("http://maven.jenkins-ci.org/content/repositories/releases/")
+        }
+        // The plugin is currently only available via the Jenkins
+        // Maven repository, but has dependencies in Maven Central.
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'org.jenkins-ci.tools:gradle-jpi-plugin:0.4.0'
+    }
+}
+
+
+jenkinsPlugin {
+    coreVersion = '1.509.1' // we need to support LTS versions
+    displayName = "XebiaLabs XL Release Plugin"
+    url = 'https://wiki.jenkins-ci.org/display/JENKINS/XL+Release+Plugin'
+    gitHubUrl = 'https://github.com/jenkinsci/XL+Release-plugin'
+
+
+    developers {
+        developer {
+            id 'XebiaLabsCI'
+            name 'XebiaLabs'
+            email 'xl-developers (at) xebialabs (dot) com'
+        }
+    }
+}
+
+configurations {
+    compile.transitive = true
+    providedRuntime.exclude group: 'jdom', module: 'jdom' //Engine packager requires JDOM2. Exclude from config so that it is included in the hpi Web-Inf lib.
+    providedRuntime.exclude group: 'de.schlichtherle.truezip', module: 'truezip-path' // needs Java7, borks on Java6 setups
+    all*.exclude group: 'com.thoughtworks.xstream', module: "xstream"
+    // this artifact lives in a netbeans repository which behaves flakey
+    // it's not used so exclude it.
+    testCompile.exclude group: 'org.netbeans.modules', module: "org-netbeans-insane"
+}
+
+def truezipVersion = "7.1.4" // this is the latest version not to bork on a Java6 Jenkins master/slave-setup
+// (Later versions reference NIO.2, resulting in a NoClassDefFoundError on java.nio.file.Path)
+
+configurations.all {
+    resolutionStrategy {
+        force "de.schlichtherle.truezip:truezip-driver-file:$truezipVersion"
+        force "de.schlichtherle.truezip:truezip-driver-zip:$truezipVersion"
+        force "de.schlichtherle.truezip:truezip-file:$truezipVersion"
+        force "de.schlichtherle.truezip:truezip-kernel:$truezipVersion"
+        force "de.schlichtherle.truezip:truezip-swing:$truezipVersion"
+    }
+}
+
+dependencies {
+    compile "com.google.guava:guava:13.0"
+    compile "com.sun.jersey:jersey-client:1.18"
+    compile "com.sun.jersey:jersey-core:1.18"
+    compile "org.jdom:jdom2:2.0.5"
+    compile "org.slf4j:slf4j-api:1.7.5"
+    compile "javax.ws.rs:jsr311-api:1.1.1"
+
+    compile 'com.google.code.findbugs:jsr305:2.0.2'
+    compile 'findbugs:annotations:1.0.0'
+
+    testCompile "junit:junit:4.11"
+    testCompile "org.mockito:mockito-all:1.9.5"
+}
