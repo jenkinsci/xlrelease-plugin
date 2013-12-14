@@ -3,8 +3,12 @@
         <f:select/>
     </f:entry>
     <f:entry title="${%Template}" field="template" help="/plugin/xlrelease-plugin/help-template.html">
-        <f:textbox default="Templates/"/>
+        <f:textbox default="Templates"/>
     </f:entry>
+
+    <f:entry title="${%Version}" field="version" help="/plugin/xlrelease-plugin/help-version.html">
+            <f:textbox default="Version"/>
+        </f:entry>
 
     <f:entry title="${%CreateRelease}" field="createRelease">
         <f:checkbox/>

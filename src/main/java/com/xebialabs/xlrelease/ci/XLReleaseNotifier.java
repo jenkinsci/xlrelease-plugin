@@ -28,6 +28,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
 import java.util.Map;
+import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
@@ -41,6 +42,7 @@ import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
+import hudson.model.TaskListener;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Notifier;
@@ -61,15 +63,17 @@ public class XLReleaseNotifier extends Notifier {
     public final String credential;
 
     public final String template;
+    public final String version;
 
     public final boolean createRelease;
     public final boolean startRelease;
 
 
     @DataBoundConstructor
-    public XLReleaseNotifier(String credential, String template, boolean createRelease, boolean startRelease) {
+    public XLReleaseNotifier(String credential, String template, String version, boolean createRelease, boolean startRelease) {
         this.credential = credential;
         this.template = template;
+        this.version = version;
         this.createRelease = createRelease;
         this.startRelease = startRelease;
     }
@@ -165,6 +169,32 @@ public class XLReleaseNotifier extends Notifier {
 
         public FormValidation doCheckXLReleaseClientProxyUrl(@QueryParameter String xlReleaseClientProxyUrl) {
             return validateOptionalUrl(xlReleaseClientProxyUrl);
+        }
+
+        public FormValidation doCheckTemplate(@QueryParameter String credential, @QueryParameter final String value, @AncestorInPath AbstractProject project) {
+            if ("Templates".equals(value))
+                return ok("Fill in the template name, eg Monthly release");
+
+            String resolvedName = null;
+
+//            try {
+//                resolvedName = project.getEnvironment(null, TaskListener.NULL).expand(value);
+//            } catch (Exception ioe) {
+//                // Couldn't resolve the app name.
+//            }
+//
+//            resolvedName = resolvedName == null ? value : resolvedName;
+//            final String applicationName = DeployitServerFactory.getNameFromId(resolvedName);
+            List<String> candidates = getXLReleaseServer(credential).searchTemplates(value + "%");
+            for (String candidate : candidates) {
+                if (candidate.equals(value)) {
+                    return ok();
+                }
+            }
+            if (!candidates.isEmpty()) {
+                return warning("Template doesn't exist. Did you mean to type one of the following: %s?", candidates);
+            }
+            return warning("Template does not exist.");
         }
 
 

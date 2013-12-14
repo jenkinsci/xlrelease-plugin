@@ -1,5 +1,7 @@
 package com.xebialabs.xlrelease.ci.server;
 
+import java.util.ArrayList;
+import java.util.List;
 import javax.ws.rs.core.MediaType;
 
 import org.slf4j.Logger;
@@ -34,7 +36,6 @@ public class XLReleaseServerImpl implements XLReleaseServer {
         // setup REST-Client
         ClientConfig config = new DefaultClientConfig();
         Client client = Client.create(config);
-        LoggerFactory.getLogger(this.getClass()).info("Connecting with: " + user + " " + password);
         client.addFilter( new HTTPBasicAuthFilter(user, password) );
         WebResource service = client.resource( serverUrl);
 
@@ -47,5 +48,20 @@ public class XLReleaseServerImpl implements XLReleaseServer {
     @Override
     public Object getVersion() {
         return serverUrl;
+    }
+
+    @Override
+    public List<String> searchTemplates(final String s) {
+        // setup REST-Client
+        ClientConfig config = new DefaultClientConfig();
+        Client client = Client.create(config);
+        client.addFilter( new HTTPBasicAuthFilter(user, password) );
+        WebResource service = client.resource( serverUrl);
+
+        LoggerFactory.getLogger(this.getClass()).info("Get all the templates");
+        String xlrelease = service.path("releases").path("templates").accept(MediaType.APPLICATION_JSON).get(ClientResponse.class).toString();
+        LoggerFactory.getLogger(this.getClass()).info(xlrelease + "\n");
+
+        return new ArrayList<String>();
     }
 }
