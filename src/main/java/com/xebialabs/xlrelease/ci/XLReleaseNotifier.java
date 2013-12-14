@@ -2,11 +2,11 @@
  * Copyright (c) 2013, XebiaLabs B.V., All rights reserved.
  *
  *
- * The Deployit plugin for Jenkins is licensed under the terms of the GPLv2
+ * The XL Release plugin for Jenkins is licensed under the terms of the GPLv2
  * <http://www.gnu.org/licenses/old-licenses/gpl-2.0.html>, like most XebiaLabs Libraries.
  * There are special exceptions to the terms and conditions of the GPLv2 as it is applied to
  * this software, see the FLOSS License Exception
- * <https://github.com/jenkinsci/deployit-plugin/blob/master/LICENSE>.
+ * <https://github.com/jenkinsci/xlrelease-plugin/blob/master/LICENSE>.
  *
  * This program is free software; you can redistribute it and/or modify it under the terms
  * of the GNU General Public License as published by the Free Software Foundation; version 2
@@ -60,18 +60,18 @@ public class XLReleaseNotifier extends Notifier {
 
     public final String credential;
 
-    public final String application;
-    public final String version;
+    public final String template;
 
-    public final boolean verbose;
+    public final boolean createRelease;
+    public final boolean startRelease;
 
 
     @DataBoundConstructor
-    public XLReleaseNotifier(String credential, String application, String version, boolean verbose) {
+    public XLReleaseNotifier(String credential, String template, boolean createRelease, boolean startRelease) {
         this.credential = credential;
-        this.application = application;
-        this.version = version;
-        this.verbose = verbose;
+        this.template = template;
+        this.createRelease = createRelease;
+        this.startRelease = startRelease;
     }
 
     public BuildStepMonitor getRequiredMonitorService() {
@@ -84,17 +84,17 @@ public class XLReleaseNotifier extends Notifier {
         return true;
     }
 
-    private XLReleaseServer getDeployitServer() {
-        return getDescriptor().getDeployitServer(credential);
+    private XLReleaseServer getXLReleaseServer() {
+        return getDescriptor().getXLReleaseServer(credential);
     }
 
     @Override
-    public DeployitDescriptor getDescriptor() {
-        return (DeployitDescriptor) super.getDescriptor();
+    public XLReleaseDescriptor getDescriptor() {
+        return (XLReleaseDescriptor) super.getDescriptor();
     }
 
     @Extension
-    public static final class DeployitDescriptor extends BuildStepDescriptor<Publisher> {
+    public static final class XLReleaseDescriptor extends BuildStepDescriptor<Publisher> {
 
         // ************ SERIALIZED GLOBAL PROPERTIES *********** //
 
@@ -108,7 +108,7 @@ public class XLReleaseNotifier extends Notifier {
 
         private final transient Map<String,XLReleaseServer> credentialServerMap = newHashMap();
 
-        public DeployitDescriptor() {
+        public XLReleaseDescriptor() {
             load();  //deserialize from xml
             mapCredentialsByName();
         }
@@ -141,7 +141,7 @@ public class XLReleaseNotifier extends Notifier {
 
         @Override
         public String getDisplayName() {
-            return "";
+            return Messages.XLReleaseNotifier_displayName();
         }
 
         private FormValidation validateOptionalUrl(String url) {
@@ -156,15 +156,15 @@ public class XLReleaseNotifier extends Notifier {
 
         }
 
-        public FormValidation doCheckDeployitServerUrl(@QueryParameter String deployitServerUrl) {
-            if (Strings.isNullOrEmpty(deployitServerUrl)) {
+        public FormValidation doCheckXLReleaseServerUrl(@QueryParameter String xlReleaseServerUrl) {
+            if (Strings.isNullOrEmpty(xlReleaseServerUrl)) {
                 return error("Url required.");
             }
-            return validateOptionalUrl(deployitServerUrl);
+            return validateOptionalUrl(xlReleaseServerUrl);
         }
 
-        public FormValidation doCheckDeployitClientProxyUrl(@QueryParameter String deployitClientProxyUrl) {
-            return validateOptionalUrl(deployitClientProxyUrl);
+        public FormValidation doCheckXLReleaseClientProxyUrl(@QueryParameter String xlReleaseClientProxyUrl) {
+            return validateOptionalUrl(xlReleaseClientProxyUrl);
         }
 
 
@@ -200,7 +200,7 @@ public class XLReleaseNotifier extends Notifier {
 
 
 
-        private XLReleaseServer getDeployitServer(String credential) {
+        private XLReleaseServer getXLReleaseServer(String credential) {
             checkNotNull(credential);
             return credentialServerMap.get(credential);
         }
