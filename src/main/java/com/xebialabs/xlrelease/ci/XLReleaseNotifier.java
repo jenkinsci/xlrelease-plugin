@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import org.kohsuke.stapler.AncestorInPath;
@@ -221,8 +222,10 @@ public class XLReleaseNotifier extends Notifier {
                 }
             }
             if (!candidates.isEmpty()) {
+                this.releaseFullView = null;
                 return warning("Template doesn't exist. Did you mean to type one of the following: %s?", candidates);
             }
+            this.releaseFullView = null;
             return warning("Template does not exist.");
         }
 
@@ -272,6 +275,9 @@ public class XLReleaseNotifier extends Notifier {
         }
 
         public Collection<TemplateVariable> getVariablesOf(final String template) {
+            if (releaseFullView == null) {
+                return Collections.emptyList();
+            }
             return releaseFullView.getVariables();
         }
     }
