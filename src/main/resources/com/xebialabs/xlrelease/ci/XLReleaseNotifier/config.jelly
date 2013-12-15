@@ -10,9 +10,17 @@
             <f:textbox default="Version"/>
         </f:entry>
 
-    <f:entry title="${%CreateRelease}" field="createRelease">
-        <f:checkbox/>
-    </f:entry>
+     <f:block>
+            <table width="100%">
+                <f:optionalBlock name="createRelease" checked="${instance.createRelease != null}" title="Create Release" inline="false">
+                    <j:set var="field" value="createRelease"/>
+
+                    <j:set var="descriptor" value="${attrs.propertyDescriptor ?: app.getDescriptorOrDie(descriptor.getPropertyType(instance,field).clazz)}"/>
+                    <j:set var="instance" value="${instance[field]}"/>
+                    <st:include from="${descriptor}" page="${descriptor.configPage}"/>
+                </f:optionalBlock>
+            </table>
+      </f:block>
 
      <f:entry title="${%StartRelease}" field="startRelease">
             <f:checkbox/>

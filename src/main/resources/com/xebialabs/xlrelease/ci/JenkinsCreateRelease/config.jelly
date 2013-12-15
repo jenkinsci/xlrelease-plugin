@@ -1,21 +1,8 @@
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
 
 
-    <f:entry title="${%Type}" field="type" help="/plugin/deployit-plugin/help-type.html">
-        <f:select/>
-    </f:entry>
-
-    <f:entry title="${%Name}" field="name" help="/plugin/deployit-plugin/help-name.html">
-        <f:textbox/>
-    </f:entry>
-
-    <f:entry title="${%Tags}" field="tags" help="/plugin/deployit-plugin/help-tags.html">
-        <f:textbox/>
-    </f:entry>
-
-
-    <f:entry title="${%Properties}" description="Properties" field="properties">
-        <f:repeatable var="property" field="properties">
+    <f:entry title="${%Variables}" description="Variables" field="variables">
+        <f:repeatable var="variable" field="variables">
             <table width="100%">
                 <f:entry title="${%Name}" field="propertyName">
                     <f:select/>

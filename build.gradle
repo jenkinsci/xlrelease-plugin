@@ -104,9 +104,11 @@ dependencies {
     compile "com.google.guava:guava:13.0"
     compile "com.sun.jersey:jersey-client:1.18"
     compile "com.sun.jersey:jersey-core:1.18"
+    compile "com.sun.jersey:jersey-json:1.18"
     compile "org.jdom:jdom2:2.0.5"
     compile "org.slf4j:slf4j-api:1.7.5"
     compile "javax.ws.rs:jsr311-api:1.1.1"
+    compile "javax.xml.bind:jaxb-api:2.2.2"
 
     compile 'com.google.code.findbugs:jsr305:2.0.2'
     compile 'findbugs:annotations:1.0.0'

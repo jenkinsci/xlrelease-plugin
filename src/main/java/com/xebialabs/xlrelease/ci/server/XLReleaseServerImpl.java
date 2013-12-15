@@ -1,17 +1,22 @@
 package com.xebialabs.xlrelease.ci.server;
 
-import java.util.ArrayList;
 import java.util.List;
 import javax.ws.rs.core.MediaType;
-
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.Predicate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.GenericType;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
+import com.sun.jersey.api.json.JSONConfiguration;
+
+import com.xebialabs.xlrelease.ci.JenkinsCreateRelease;
+import com.xebialabs.xlrelease.ci.util.ReleaseFullView;
 
 public class XLReleaseServerImpl implements XLReleaseServer {
 
@@ -37,7 +42,7 @@ public class XLReleaseServerImpl implements XLReleaseServer {
         ClientConfig config = new DefaultClientConfig();
         Client client = Client.create(config);
         client.addFilter( new HTTPBasicAuthFilter(user, password) );
-        WebResource service = client.resource( serverUrl);
+        WebResource service = client.resource(serverUrl);
 
         LoggerFactory.getLogger(this.getClass()).info("Check that XL Release is running");
         String xlrelease = service.path("releases").accept(MediaType.APPLICATION_JSON).get(ClientResponse.class).toString();
@@ -51,17 +56,45 @@ public class XLReleaseServerImpl implements XLReleaseServer {
     }
 
     @Override
-    public List<String> searchTemplates(final String s) {
+    public List<ReleaseFullView> searchTemplates(final String s) {
         // setup REST-Client
         ClientConfig config = new DefaultClientConfig();
+        config.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
         Client client = Client.create(config);
         client.addFilter( new HTTPBasicAuthFilter(user, password) );
-        WebResource service = client.resource( serverUrl);
+        WebResource service = client.resource(serverUrl);
 
         LoggerFactory.getLogger(this.getClass()).info("Get all the templates");
-        String xlrelease = service.path("releases").path("templates").accept(MediaType.APPLICATION_JSON).get(ClientResponse.class).toString();
-        LoggerFactory.getLogger(this.getClass()).info(xlrelease + "\n");
+        GenericType<List<ReleaseFullView>> genericType =
+                new GenericType<List<ReleaseFullView>>() {};
+        List<ReleaseFullView> templates = service.path("releases").path("templates").accept(MediaType.APPLICATION_JSON).get(genericType);
+        CollectionUtils.filter(templates, new Predicate() {
+            public boolean evaluate(Object o) {
+               if (((ReleaseFullView)o).getTitle().contains(s))
+                   return true;
+               return false;
+            }
+        });
+        LoggerFactory.getLogger(this.getClass()).info(templates + "\n");
 
-        return new ArrayList<String>();
+        return templates;
+    }
+
+    @Override
+    public ReleaseFullView createRelease(final String resolvedTemplate, final String resolvedVersion, final JenkinsCreateRelease createRelease) {
+        // POST /releases/
+        LoggerFactory.getLogger(this.getClass()).info("Create a release for " + resolvedTemplate);
+
+        ReleaseFullView result = new ReleaseFullView();
+        result.setId("pietjepuk");
+
+        return result;
+    }
+
+    @Override
+    public void startRelease(final String releaseId) {
+        //POST /releases/{releaseId}/start
+        LoggerFactory.getLogger(this.getClass()).info("Start the release for: " + releaseId);
+
     }
 }

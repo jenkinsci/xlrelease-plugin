@@ -21,21 +21,50 @@
  * Floor, Boston, MA 02110-1301  USA
  */
 
-package com.xebialabs.xlrelease.ci;
+package com.xebialabs.xlrelease.ci.util;
 
-import hudson.model.Descriptor;
+import java.io.Serializable;
 
-public abstract class ImportLocationDescriptor extends Descriptor<ImportLocation> {
-    @Override
-    public String getDisplayName() {
-        return "location";
+import org.jvnet.localizer.Localizable;
+
+import hudson.model.BuildListener;
+
+public class JenkinsReleaseListener implements Serializable {
+
+    private final BuildListener listener;
+    private final boolean debug;
+
+    public JenkinsReleaseListener(final BuildListener listener) {
+        this(listener, false);
     }
 
-    public ImportLocationDescriptor() {
-        super();
+    public JenkinsReleaseListener(BuildListener listener, boolean debug) {
+        this.listener = listener;
+        this.debug = debug;
     }
 
-    public ImportLocationDescriptor(Class<? extends ImportLocation> clazz) {
-        super(clazz);
+    public void info(Localizable localizable) {
+        info(String.valueOf(localizable));
+    }
+
+    public void error(Localizable localizable) {
+        error(String.valueOf(localizable));
+    }
+
+    public void debug(String message) {
+        if (debug)
+            listener.getLogger().println("Debug: " + message);
+    }
+
+    public void info(String message) {
+        listener.getLogger().println("Info: " + message);
+    }
+
+    public void trace(String message) {
+        listener.getLogger().println("Trace: " + message);
+    }
+
+    public void error(String message) {
+        listener.error(message);
     }
 }

@@ -3,15 +3,15 @@ package com.xebialabs.xlrelease.ci.server;
 import java.text.SimpleDateFormat;
 import java.util.List;
 
-import com.xebialabs.xlrelease.ci.util.JenkinsDeploymentListener;
+import com.xebialabs.xlrelease.ci.util.JenkinsReleaseListener;
 
 import static com.google.common.collect.Lists.newArrayList;
 
 public class DeployCommand {
 
-    private JenkinsDeploymentListener listener;
+    private JenkinsReleaseListener listener;
 
-    DeployCommand( JenkinsDeploymentListener listener) {
+    DeployCommand( JenkinsReleaseListener listener) {
         this.listener = listener;
     }
 

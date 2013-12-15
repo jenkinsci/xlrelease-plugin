@@ -26,6 +26,7 @@ package com.xebialabs.xlrelease.ci;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import org.kohsuke.stapler.AncestorInPath;
@@ -36,13 +37,16 @@ import com.google.common.base.Strings;
 
 import com.xebialabs.xlrelease.ci.server.XLReleaseServer;
 import com.xebialabs.xlrelease.ci.server.XLReleaseServerFactory;
+import com.xebialabs.xlrelease.ci.util.JenkinsReleaseListener;
+import com.xebialabs.xlrelease.ci.util.ReleaseFullView;
+import com.xebialabs.xlrelease.ci.util.TemplateVariable;
 
+import hudson.EnvVars;
 import hudson.Extension;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
-import hudson.model.TaskListener;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Notifier;
@@ -65,12 +69,12 @@ public class XLReleaseNotifier extends Notifier {
     public final String template;
     public final String version;
 
-    public final boolean createRelease;
+    public final JenkinsCreateRelease createRelease;
     public final boolean startRelease;
 
 
     @DataBoundConstructor
-    public XLReleaseNotifier(String credential, String template, String version, boolean createRelease, boolean startRelease) {
+    public XLReleaseNotifier(String credential, String template, String version, JenkinsCreateRelease createRelease, boolean startRelease) {
         this.credential = credential;
         this.template = template;
         this.version = version;
@@ -84,9 +88,40 @@ public class XLReleaseNotifier extends Notifier {
 
     @Override
     public boolean perform(final AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
+        final JenkinsReleaseListener deploymentListener = new JenkinsReleaseListener(listener);
+
+        final EnvVars envVars = build.getEnvironment(listener);
+        String resolvedTemplate = envVars.expand(template);
+        String resolvedVersion = envVars.expand(version);
+
+        // createRelease
+        ReleaseFullView releaseFullView = null;
+        if (createRelease != null || startRelease)
+            releaseFullView = createRelease(resolvedTemplate,resolvedVersion, deploymentListener);
+
+        // startRelease
+        if (startRelease)
+            startRelease(releaseFullView, resolvedTemplate,resolvedVersion, deploymentListener);
 
         return true;
     }
+
+    private ReleaseFullView createRelease(final String resolvedTemplate, final String resolvedVersion, final JenkinsReleaseListener deploymentListener) {
+        deploymentListener.info(Messages.XLReleaseNotifier_createRelease(resolvedTemplate, resolvedVersion));
+
+        // create a new release instance
+        ReleaseFullView releaseFullView = getXLReleaseServer().createRelease(resolvedTemplate, resolvedVersion, createRelease);
+        return releaseFullView;
+
+    }
+
+    private void startRelease(final ReleaseFullView releaseFullView, final String resolvedTemplate, final String resolvedVersion, final JenkinsReleaseListener deploymentListener) {
+        deploymentListener.info(Messages.XLReleaseNotifier_startRelease(resolvedTemplate, resolvedVersion));
+
+        // start the release
+        getXLReleaseServer().startRelease(releaseFullView.getId());
+    }
+
 
     private XLReleaseServer getXLReleaseServer() {
         return getDescriptor().getXLReleaseServer(credential);
@@ -111,6 +146,8 @@ public class XLReleaseNotifier extends Notifier {
         // ************ OTHER NON-SERIALIZABLE PROPERTIES *********** //
 
         private final transient Map<String,XLReleaseServer> credentialServerMap = newHashMap();
+
+        private ReleaseFullView releaseFullView;
 
         public XLReleaseDescriptor() {
             load();  //deserialize from xml
@@ -175,19 +212,11 @@ public class XLReleaseNotifier extends Notifier {
             if ("Templates".equals(value))
                 return ok("Fill in the template name, eg Monthly release");
 
-            String resolvedName = null;
 
-//            try {
-//                resolvedName = project.getEnvironment(null, TaskListener.NULL).expand(value);
-//            } catch (Exception ioe) {
-//                // Couldn't resolve the app name.
-//            }
-//
-//            resolvedName = resolvedName == null ? value : resolvedName;
-//            final String applicationName = DeployitServerFactory.getNameFromId(resolvedName);
-            List<String> candidates = getXLReleaseServer(credential).searchTemplates(value + "%");
-            for (String candidate : candidates) {
-                if (candidate.equals(value)) {
+            List<ReleaseFullView> candidates = getXLReleaseServer(credential).searchTemplates(value);
+            for (ReleaseFullView candidate : candidates) {
+                if (candidate.getTitle().equals(value)) {
+                    this.releaseFullView = candidate;
                     return ok();
                 }
             }
@@ -240,6 +269,10 @@ public class XLReleaseNotifier extends Notifier {
             if (credentials.isEmpty())
                 throw new RuntimeException("No credentials defined in the system configuration");
             return credentials.iterator().next();
+        }
+
+        public Collection<TemplateVariable> getVariablesOf(final String template) {
+            return releaseFullView.getVariables();
         }
     }
 }

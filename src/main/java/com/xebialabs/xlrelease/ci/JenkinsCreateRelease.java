@@ -1,3 +1,16 @@
+package com.xebialabs.xlrelease.ci;
+
+
+import java.util.List;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.StaplerRequest;
+
+import hudson.Extension;
+import hudson.model.Describable;
+import hudson.model.Descriptor;
+import jenkins.model.Jenkins;
+import net.sf.json.JSONObject;
+
 /**
  * Copyright (c) 2013, XebiaLabs B.V., All rights reserved.
  *
@@ -20,42 +33,35 @@
  * program; if not, write to the Free Software Foundation, Inc., 51 Franklin St, Fifth
  * Floor, Boston, MA 02110-1301  USA
  */
+public class JenkinsCreateRelease implements Describable<JenkinsCreateRelease> {
 
-package com.xebialabs.xlrelease.ci;
-
-import com.xebialabs.xlrelease.ci.util.JenkinsDeploymentListener;
-
-import hudson.Extension;
-import hudson.FilePath;
-import org.kohsuke.stapler.DataBoundConstructor;
-
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.base.Strings.emptyToNull;
-
-public class URLLocation extends ImportLocation {
-    public final String url;
+    private final List<NameValuePair> variables;
 
     @DataBoundConstructor
-    public URLLocation(String url) {
-        this.url = url;
+    public JenkinsCreateRelease(List<NameValuePair> variables) {
+        this.variables = variables;
     }
 
-    @Override
-    public String getDarFileLocation(FilePath workspace, JenkinsDeploymentListener deploymentListener) {
-        checkNotNull(emptyToNull(url), "URL is empty or null");
-        return url;
+    public Descriptor<JenkinsCreateRelease> getDescriptor() {
+        return Jenkins.getInstance().getDescriptorOrDie(getClass());
+    }
+
+    public List<NameValuePair> getVariables() {
+        return variables;
     }
 
     @Extension
-    public static final class DescriptorImpl extends ImportLocationDescriptor {
+    public static final class DescriptorImpl extends Descriptor<JenkinsCreateRelease> {
         @Override
         public String getDisplayName() {
-            return "URL";
+            return "JenkinsCreateRelease";
+        }
+
+        @Override
+        public JenkinsCreateRelease newInstance(StaplerRequest req, JSONObject formData) throws FormException {
+            return super.newInstance(req, formData);
         }
     }
-
-    @Override
-    public String toString() {
-        return String.format("URLLocation[url: %s]", url);
-    }
 }
+
+
