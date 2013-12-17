@@ -250,7 +250,7 @@ public class XLReleaseNotifier extends Notifier {
         }
 
         public FormValidation doCheckCredential(@QueryParameter String credential) {
-            return warning("Changing credentials may unintentionally change your deployables' types - check the definitions afterward");
+            return warning("Changing credentials may unintentionally change your available templates");
         }
 
         @Override
