@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2013, XebiaLabs B.V., All rights reserved.
+ * Copyright (c) 2014, XebiaLabs B.V., All rights reserved.
  *
  *
  * The XL Release plugin for Jenkins is licensed under the terms of the GPLv2
