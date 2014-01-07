@@ -26,7 +26,6 @@ public class XLReleaseServerImpl implements XLReleaseServer {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(XLReleaseServerImpl.class);
 
-    private XLReleaseDescriptorRegistry descriptorRegistry;
     private String user;
     private String password;
     private String proxyUrl;
