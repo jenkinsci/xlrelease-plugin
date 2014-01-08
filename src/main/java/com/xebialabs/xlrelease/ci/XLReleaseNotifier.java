@@ -30,6 +30,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.Transformer;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
@@ -59,6 +62,8 @@ import net.sf.json.JSONObject;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Maps.newHashMap;
+import static com.xebialabs.xlrelease.ci.util.ListBoxModels.emptyModel;
+import static com.xebialabs.xlrelease.ci.util.ListBoxModels.of;
 import static hudson.util.FormValidation.error;
 import static hudson.util.FormValidation.ok;
 import static hudson.util.FormValidation.warning;
@@ -92,17 +97,16 @@ public class XLReleaseNotifier extends Notifier {
         final JenkinsReleaseListener deploymentListener = new JenkinsReleaseListener(listener);
 
         final EnvVars envVars = build.getEnvironment(listener);
-        String resolvedTemplate = envVars.expand(template);
         String resolvedVersion = envVars.expand(version);
 
         // createRelease
         ReleaseFullView releaseFullView = null;
         if (createRelease != null || startRelease)
-            releaseFullView = createRelease(resolvedTemplate,resolvedVersion, deploymentListener);
+            releaseFullView = createRelease(template,resolvedVersion, deploymentListener);
 
         // startRelease
         if (startRelease)
-            startRelease(releaseFullView, resolvedTemplate,resolvedVersion, deploymentListener);
+            startRelease(releaseFullView, template,resolvedVersion, deploymentListener);
 
         return true;
     }
@@ -213,20 +217,23 @@ public class XLReleaseNotifier extends Notifier {
             if ("Templates".equals(value))
                 return ok("Fill in the template name, eg Monthly release");
 
-
-            List<ReleaseFullView> candidates = getXLReleaseServer(credential).searchTemplates(value);
-            for (ReleaseFullView candidate : candidates) {
-                if (candidate.getTitle().equals(value)) {
-                    this.releaseFullView = candidate;
-                    return ok();
+            try {
+                List<ReleaseFullView> candidates = getXLReleaseServer(credential).searchTemplates(value);
+                for (ReleaseFullView candidate : candidates) {
+                    if (candidate.getTitle().equals(value)) {
+                        this.releaseFullView = candidate;
+                        return ok();
+                    }
                 }
-            }
-            if (!candidates.isEmpty()) {
+                if (!candidates.isEmpty()) {
+                    this.releaseFullView = null;
+                    return warning("Template doesn't exist. Did you mean to type one of the following: %s?", candidates);
+                }
                 this.releaseFullView = null;
-                return warning("Template doesn't exist. Did you mean to type one of the following: %s?", candidates);
+                return warning("Template does not exist.");
+            } catch (Exception exp) {
+                return warning("Failed to communicate with XL Release server");
             }
-            this.releaseFullView = null;
-            return warning("Template does not exist.");
         }
 
 
@@ -279,6 +286,22 @@ public class XLReleaseNotifier extends Notifier {
                 return Collections.emptyList();
             }
             return releaseFullView.getVariables();
+        }
+
+        public ListBoxModel doFillTemplateItems(@QueryParameter String credential) {
+            try {
+                List<ReleaseFullView> templates = getXLReleaseServer(credential).getAllTemplates();
+
+                Collection<String> titles = CollectionUtils.collect(templates, new Transformer() {
+                    public Object transform(Object o) {
+                        return ((ReleaseFullView) o).getTitle();
+                    }
+                });
+
+                return of(titles);
+            } catch (Exception exp) {
+                return emptyModel();
+            }
         }
     }
 }

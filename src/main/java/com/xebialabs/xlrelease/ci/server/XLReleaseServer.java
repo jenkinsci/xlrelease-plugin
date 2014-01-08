@@ -34,6 +34,7 @@ public interface XLReleaseServer {
     Object getVersion();
 
     List<ReleaseFullView> searchTemplates(String s);
+    List<ReleaseFullView> getAllTemplates();
 
 
     ReleaseFullView createRelease(String resolvedTemplate, String resolvedVersion, JenkinsCreateRelease createRelease);

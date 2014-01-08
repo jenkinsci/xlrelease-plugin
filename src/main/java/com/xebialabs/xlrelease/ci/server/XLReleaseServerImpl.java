@@ -83,17 +83,8 @@ public class XLReleaseServerImpl implements XLReleaseServer {
 
     @Override
     public List<ReleaseFullView> searchTemplates(final String s) {
-        // setup REST-Client
-        ClientConfig config = new DefaultClientConfig();
-        config.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
-        Client client = Client.create(config);
-        client.addFilter( new HTTPBasicAuthFilter(user, password) );
-        WebResource service = client.resource(serverUrl);
+        List<ReleaseFullView> templates = getAllTemplates();
 
-        LoggerFactory.getLogger(this.getClass()).info("Get all the templates");
-        GenericType<List<ReleaseFullView>> genericType =
-                new GenericType<List<ReleaseFullView>>() {};
-        List<ReleaseFullView> templates = service.path("releases").path("templates").accept(MediaType.APPLICATION_JSON).get(genericType);
         CollectionUtils.filter(templates, new Predicate() {
             public boolean evaluate(Object o) {
                if (((ReleaseFullView)o).getTitle().contains(s))
@@ -104,6 +95,21 @@ public class XLReleaseServerImpl implements XLReleaseServer {
         LoggerFactory.getLogger(this.getClass()).info(templates + "\n");
 
         return templates;
+    }
+
+    @Override
+    public List<ReleaseFullView> getAllTemplates() {
+        // setup REST-Client
+        ClientConfig config = new DefaultClientConfig();
+        config.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
+        Client client = Client.create(config);
+        client.addFilter( new HTTPBasicAuthFilter(user, password) );
+        WebResource service = client.resource(serverUrl);
+
+        LoggerFactory.getLogger(this.getClass()).info("Get all the templates");
+        GenericType<List<ReleaseFullView>> genericType =
+                new GenericType<List<ReleaseFullView>>() {};
+        return service.path("releases").path("templates").accept(MediaType.APPLICATION_JSON).get(genericType);
     }
 
     @Override
