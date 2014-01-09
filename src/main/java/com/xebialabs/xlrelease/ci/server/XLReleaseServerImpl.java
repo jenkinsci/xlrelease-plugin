@@ -39,7 +39,6 @@ import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import com.sun.jersey.api.json.JSONConfiguration;
 
-import com.xebialabs.xlrelease.ci.JenkinsCreateRelease;
 import com.xebialabs.xlrelease.ci.NameValuePair;
 import com.xebialabs.xlrelease.ci.util.CreateReleaseView;
 import com.xebialabs.xlrelease.ci.util.ReleaseFullView;
@@ -113,7 +112,7 @@ public class XLReleaseServerImpl implements XLReleaseServer {
     }
 
     @Override
-    public ReleaseFullView createRelease(final String resolvedTemplate, final String resolvedVersion, final JenkinsCreateRelease createRelease) {
+    public ReleaseFullView createRelease(final String resolvedTemplate, final String resolvedVersion, final List<NameValuePair> variables) {
         // POST /releases/
         LoggerFactory.getLogger(this.getClass()).info("Create a release for " + resolvedTemplate);
         // setup REST-Client
@@ -127,7 +126,7 @@ public class XLReleaseServerImpl implements XLReleaseServer {
                 new GenericType<ReleaseFullView>() {};
 
 
-        CreateReleaseView createReleaseView = new CreateReleaseView(getTemplateId(resolvedTemplate), resolvedVersion, convertToTemplateVariables(createRelease.getVariables()));
+        CreateReleaseView createReleaseView = new CreateReleaseView(getTemplateId(resolvedTemplate), resolvedVersion, convertToTemplateVariables(variables));
 
         ReleaseFullView result = service.path("releases").type(MediaType.APPLICATION_JSON).post(genericType, createReleaseView);
 

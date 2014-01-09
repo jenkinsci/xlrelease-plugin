@@ -25,7 +25,7 @@ package com.xebialabs.xlrelease.ci.server;
 
 import java.util.List;
 
-import com.xebialabs.xlrelease.ci.JenkinsCreateRelease;
+import com.xebialabs.xlrelease.ci.NameValuePair;
 import com.xebialabs.xlrelease.ci.util.ReleaseFullView;
 
 public interface XLReleaseServer {
@@ -37,7 +37,7 @@ public interface XLReleaseServer {
     List<ReleaseFullView> getAllTemplates();
 
 
-    ReleaseFullView createRelease(String resolvedTemplate, String resolvedVersion, JenkinsCreateRelease createRelease);
+    ReleaseFullView createRelease(String resolvedTemplate, String resolvedVersion, List<NameValuePair> variables);
 
     void startRelease(String releaseId);
 }

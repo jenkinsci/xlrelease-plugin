@@ -60,9 +60,9 @@ public class NameValuePair extends AbstractDescribableImpl<NameValuePair> {
             return "NameValuePair";
         }
 
-        public ListBoxModel doFillPropertyNameItems(
+        public ListBoxModel doFillPropertyNameItems(@QueryParameter @RelativePath(value = "..") String credential,
                 @QueryParameter @RelativePath(value = "..") String template) {
-            Collection<TemplateVariable> properties = getXLReleaseDescriptor().getVariablesOf(template);
+            Collection<TemplateVariable> properties = getXLReleaseDescriptor().getVariablesOf(credential, template);
             Collection<String> keys = CollectionUtils.collect(properties, new Transformer() {
                 @Override
                 public Object transform(final Object input) {

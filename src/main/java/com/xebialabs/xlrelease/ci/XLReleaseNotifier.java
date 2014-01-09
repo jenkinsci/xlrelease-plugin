@@ -75,16 +75,16 @@ public class XLReleaseNotifier extends Notifier {
     public final String template;
     public final String version;
 
-    public final JenkinsCreateRelease createRelease;
+    public List<NameValuePair> variables;
     public final boolean startRelease;
 
 
     @DataBoundConstructor
-    public XLReleaseNotifier(String credential, String template, String version, JenkinsCreateRelease createRelease, boolean startRelease) {
+    public XLReleaseNotifier(String credential, String template, String version,  List<NameValuePair> variables, boolean startRelease) {
         this.credential = credential;
         this.template = template;
         this.version = version;
-        this.createRelease = createRelease;
+        this.variables = variables;
         this.startRelease = startRelease;
     }
 
@@ -101,7 +101,7 @@ public class XLReleaseNotifier extends Notifier {
 
         // createRelease
         ReleaseFullView releaseFullView = null;
-        if (createRelease != null || startRelease)
+        if (variables != null || startRelease)
             releaseFullView = createRelease(template,resolvedVersion, deploymentListener);
 
         // startRelease
@@ -115,7 +115,7 @@ public class XLReleaseNotifier extends Notifier {
         deploymentListener.info(Messages.XLReleaseNotifier_createRelease(resolvedTemplate, resolvedVersion));
 
         // create a new release instance
-        ReleaseFullView releaseFullView = getXLReleaseServer().createRelease(resolvedTemplate, resolvedVersion, createRelease);
+        ReleaseFullView releaseFullView = getXLReleaseServer().createRelease(resolvedTemplate, resolvedVersion, variables);
         return releaseFullView;
 
     }
@@ -214,27 +214,44 @@ public class XLReleaseNotifier extends Notifier {
         }
 
         public FormValidation doCheckTemplate(@QueryParameter String credential, @QueryParameter final String value, @AncestorInPath AbstractProject project) {
-            if ("Templates".equals(value))
-                return ok("Fill in the template name, eg Monthly release");
-
             try {
-                List<ReleaseFullView> candidates = getXLReleaseServer(credential).searchTemplates(value);
-                for (ReleaseFullView candidate : candidates) {
-                    if (candidate.getTitle().equals(value)) {
-                        this.releaseFullView = candidate;
-                        return ok();
-                    }
+                this.releaseFullView = getTemplate(credential,value);
+                if(this.releaseFullView != null) {
+                    return warning("Changing template may unintentionally change your variables");
                 }
-                if (!candidates.isEmpty()) {
-                    this.releaseFullView = null;
-                    return warning("Template doesn't exist. Did you mean to type one of the following: %s?", candidates);
-                }
-                this.releaseFullView = null;
                 return warning("Template does not exist.");
             } catch (Exception exp) {
                 return warning("Failed to communicate with XL Release server");
             }
         }
+
+        private ReleaseFullView getTemplate(String credential, String value) {
+            List<ReleaseFullView> candidates = getXLReleaseServer(credential).searchTemplates(value);
+            for (ReleaseFullView candidate : candidates) {
+                if (candidate.getTitle().equals(value)) {
+                    return candidate;
+                }
+            }
+            return null;
+
+        }
+
+        public ListBoxModel doFillTemplateItems(@QueryParameter String credential) {
+            try {
+                List<ReleaseFullView> templates = getXLReleaseServer(credential).getAllTemplates();
+
+                Collection<String> titles = CollectionUtils.collect(templates, new Transformer() {
+                    public Object transform(Object o) {
+                        return ((ReleaseFullView) o).getTitle();
+                    }
+                });
+
+                return of(titles);
+            } catch (Exception exp) {
+                return emptyModel();
+            }
+        }
+
 
 
         public List<Credential> getCredentials() {
@@ -266,9 +283,6 @@ public class XLReleaseNotifier extends Notifier {
         }
 
 
-
-
-
         private XLReleaseServer getXLReleaseServer(String credential) {
             checkNotNull(credential);
             return credentialServerMap.get(credential);
@@ -281,27 +295,22 @@ public class XLReleaseNotifier extends Notifier {
             return credentials.iterator().next();
         }
 
-        public Collection<TemplateVariable> getVariablesOf(final String template) {
+        public Collection<TemplateVariable> getVariablesOf(final String credential, final String template) {
+            this.releaseFullView = getTemplate(credential, template);
             if (releaseFullView == null) {
                 return Collections.emptyList();
             }
             return releaseFullView.getVariables();
         }
 
-        public ListBoxModel doFillTemplateItems(@QueryParameter String credential) {
-            try {
-                List<ReleaseFullView> templates = getXLReleaseServer(credential).getAllTemplates();
-
-                Collection<String> titles = CollectionUtils.collect(templates, new Transformer() {
-                    public Object transform(Object o) {
-                        return ((ReleaseFullView) o).getTitle();
-                    }
-                });
-
-                return of(titles);
-            } catch (Exception exp) {
-                return emptyModel();
+        public int getNumberOfVariables(@QueryParameter String credential, @QueryParameter String template) {
+            this.releaseFullView = getTemplate(credential, template);
+            if (releaseFullView == null) {
+                return 0;
             }
+            return this.releaseFullView.getVariables().size();
         }
+
+
     }
 }
