@@ -26,10 +26,7 @@ package com.xebialabs.xlrelease.ci;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Transformer;
@@ -99,10 +96,16 @@ public class XLReleaseNotifier extends Notifier {
         final EnvVars envVars = build.getEnvironment(listener);
         String resolvedVersion = envVars.expand(version);
 
+
+        List<NameValuePair> resolvedVariables = new ArrayList<NameValuePair>();
+        for (NameValuePair nameValuePair : variables) {
+            resolvedVariables.add(new NameValuePair(nameValuePair.propertyName, envVars.expand(nameValuePair.propertyValue)));
+        }
+
         // createRelease
         ReleaseFullView releaseFullView = null;
         if (variables != null || startRelease)
-            releaseFullView = createRelease(template,resolvedVersion, deploymentListener);
+            releaseFullView = createRelease(template,resolvedVersion, resolvedVariables, deploymentListener);
 
         // startRelease
         if (startRelease)
@@ -111,11 +114,11 @@ public class XLReleaseNotifier extends Notifier {
         return true;
     }
 
-    private ReleaseFullView createRelease(final String resolvedTemplate, final String resolvedVersion, final JenkinsReleaseListener deploymentListener) {
+    private ReleaseFullView createRelease(final String resolvedTemplate, final String resolvedVersion, final List<NameValuePair> resolvedVariables, final JenkinsReleaseListener deploymentListener) {
         deploymentListener.info(Messages.XLReleaseNotifier_createRelease(resolvedTemplate, resolvedVersion));
 
         // create a new release instance
-        ReleaseFullView releaseFullView = getXLReleaseServer().createRelease(resolvedTemplate, resolvedVersion, variables);
+        ReleaseFullView releaseFullView = getXLReleaseServer().createRelease(resolvedTemplate, resolvedVersion, resolvedVariables);
         return releaseFullView;
 
     }
