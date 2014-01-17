@@ -168,7 +168,7 @@ public class XLReleaseNotifier extends Notifier {
                 String proxyUrl = credential.resolveProxyUrl(xlReleaseClientProxyUrl);
 
                 credentialServerMap.put(credential.name,
-                        XLReleaseServerFactory.newInstance(serverUrl, proxyUrl, credential.username, credential.password.getPlainText()));
+                        XLReleaseServerFactory.newInstance(serverUrl, proxyUrl, credential.username, credential.password != null ? credential.password.getPlainText() : ""));
             }
         }
 
@@ -308,7 +308,7 @@ public class XLReleaseNotifier extends Notifier {
 
         public int getNumberOfVariables(@QueryParameter String credential, @QueryParameter String template) {
             this.releaseFullView = getTemplate(credential, template);
-            if (releaseFullView == null) {
+            if (releaseFullView == null || CollectionUtils.isEmpty(releaseFullView.getVariables())) {
                 return 0;
             }
             return this.releaseFullView.getVariables().size();
