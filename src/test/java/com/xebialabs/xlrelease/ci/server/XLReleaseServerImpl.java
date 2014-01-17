@@ -93,7 +93,7 @@ public class XLReleaseServerImpl implements XLReleaseServer {
 
     @Override
     public List<ReleaseFullView> getAllTemplates() {
-        List<ReleaseFullView> result = new ArrayList<>();
+        List<ReleaseFullView> result = new ArrayList<ReleaseFullView>();
         result.add(new ReleaseFullView("someid","atemplate",null));
 
         return result;
