@@ -43,6 +43,10 @@ repositories {
     maven {
         url "${projectDir}/repo"
     }
+    maven {
+        name "jenkins"
+        delegate.url("http://maven.jenkins-ci.org/content/repositories/releases/")
+    }
 }
 
 buildscript {
@@ -54,6 +58,7 @@ buildscript {
         // The plugin is currently only available via the Jenkins
         // Maven repository, but has dependencies in Maven Central.
         mavenCentral()
+
     }
     dependencies {
         classpath 'org.jenkins-ci.tools:gradle-jpi-plugin:0.4.0'
@@ -62,7 +67,7 @@ buildscript {
 
 
 jenkinsPlugin {
-    coreVersion = '1.509.1' // we need to support LTS versions
+    coreVersion = '1.509.4' // we need to support LTS versions
     displayName = "XebiaLabs XL Release Plugin"
     url = 'https://wiki.jenkins-ci.org/display/JENKINS/XL+Release+Plugin'
     gitHubUrl = 'https://github.com/jenkinsci/XL+Release-plugin'
@@ -100,6 +105,11 @@ configurations.all {
     }
 }
 
+task test(type:Exec, overwrite:true) {
+
+    commandLine 'mvn', 'clean', 'test'
+}
+
 dependencies {
     compile "com.google.guava:guava:13.0"
     compile "com.sun.jersey:jersey-client:1.18"
@@ -114,5 +124,8 @@ dependencies {
     compile 'findbugs:annotations:1.0.0'
 
     testCompile "junit:junit:4.11"
+    testCompile "org.powermock:powermock-module-junit4:1.5.3"
+    testCompile "org.powermock:powermock-api-mockito:1.5.3"
     testCompile "org.mockito:mockito-all:1.9.5"
+
 }

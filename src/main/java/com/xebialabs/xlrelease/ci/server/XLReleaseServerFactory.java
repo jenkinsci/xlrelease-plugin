@@ -31,7 +31,7 @@ import com.google.common.reflect.Reflection;
 
 
 public class XLReleaseServerFactory {
-    public static boolean validConnection(String serverUrl, String proxyUrl, String username, String password) throws IllegalStateException {
+    public boolean validConnection(String serverUrl, String proxyUrl, String username, String password) throws IllegalStateException {
         newInstance(serverUrl, proxyUrl, username, password).newCommunicator();  //throws IllegalStateException on failure.
         return true;
     }

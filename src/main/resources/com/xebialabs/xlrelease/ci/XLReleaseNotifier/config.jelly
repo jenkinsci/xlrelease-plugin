@@ -1,26 +1,34 @@
+<?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
     <f:entry title="${%Credential}" field="credential" help="/plugin/xlrelease-plugin/help-credential.html">
         <f:select/>
     </f:entry>
     <f:entry title="${%Template}" field="template" help="/plugin/xlrelease-plugin/help-template.html">
-        <f:textbox default="Templates"/>
+        <f:select/>
     </f:entry>
 
     <f:entry title="${%Version}" field="version" help="/plugin/xlrelease-plugin/help-version.html">
             <f:textbox default="Version"/>
         </f:entry>
 
-     <f:block>
-            <table width="100%">
-                <f:optionalBlock name="createRelease" checked="${instance.createRelease != null}" title="Create Release" inline="false">
-                    <j:set var="field" value="createRelease"/>
+     <f:entry title="${%Variables}" field="variables" >
+             <f:repeatable var="variable" field="variables" noAddButton="false" minimum="${descriptor.getNumberOfVariables(instance.credential, instance.template)}">
+                 <table width="100%">
+                     <f:entry title="${%Name}" field="propertyName">
+                         <f:select/>
+                     </f:entry>
 
-                    <j:set var="descriptor" value="${attrs.propertyDescriptor ?: app.getDescriptorOrDie(descriptor.getPropertyType(instance,field).clazz)}"/>
-                    <j:set var="instance" value="${instance[field]}"/>
-                    <st:include from="${descriptor}" page="${descriptor.configPage}"/>
-                </f:optionalBlock>
-            </table>
-      </f:block>
+                     <f:entry title="${%Value}" field="propertyValue">
+                         <f:textbox/>
+                     </f:entry>
+                     <f:entry title="">
+                         <div align="right">
+                             <f:repeatableDeleteButton/>
+                         </div>
+                     </f:entry>
+                 </table>
+             </f:repeatable>
+         </f:entry>
 
      <f:entry title="${%StartRelease}" field="startRelease">
             <f:checkbox/>

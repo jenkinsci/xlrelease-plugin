@@ -23,17 +23,36 @@
 
 package com.xebialabs.xlrelease.ci;
 
-public enum VersionKind {
+import hudson.model.FreeStyleProject;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.recipes.LocalData;
 
-    Packaged("From this job"), Other("Other (please specify above)");
+public class XLReleaseNotifierFormTest {
 
-    private final String label;
+    @Rule
+    public JenkinsRule j = new JenkinsRule();
 
-    VersionKind(String kind) {
-        this.label = kind;
+    @Before
+    public void setUp() {
     }
 
-    public String getLabel() {
-        return label;
+
+
+    @Test
+    @LocalData
+    public void testXLReleaseForm() throws Exception {
+        FreeStyleProject p = j.createFreeStyleProject();
+        XLReleaseNotifier before = new XLReleaseNotifier("admin", "atemplate", "1.0", null, false);
+        p.getPublishersList().add(before);
+
+        j.submit(j.createWebClient().getPage(p,"configure").getFormByName("config"));
+
+        XLReleaseNotifier after = p.getPublishersList().get(XLReleaseNotifier.class);
+
+        j.assertEqualBeans(before,after,"credential,template,version");
     }
+
 }

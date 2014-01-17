@@ -23,46 +23,18 @@
 
 package com.xebialabs.xlrelease.ci;
 
+import junit.framework.Test;
+import junit.framework.TestCase;
+import org.jvnet.hudson.test.JellyTestSuiteBuilder;
 
-import java.util.List;
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.StaplerRequest;
+import java.io.File;
 
-import hudson.Extension;
-import hudson.model.Describable;
-import hudson.model.Descriptor;
-import jenkins.model.Jenkins;
-import net.sf.json.JSONObject;
+public class XLReleaseJellyTest extends TestCase{
 
-public class JenkinsCreateRelease implements Describable<JenkinsCreateRelease> {
 
-    private final List<NameValuePair> variables;
-
-    @DataBoundConstructor
-    public JenkinsCreateRelease(List<NameValuePair> variables) {
-        this.variables = variables;
-    }
-
-    public Descriptor<JenkinsCreateRelease> getDescriptor() {
-        return Jenkins.getInstance().getDescriptorOrDie(getClass());
-    }
-
-    public List<NameValuePair> getVariables() {
-        return variables;
-    }
-
-    @Extension
-    public static final class DescriptorImpl extends Descriptor<JenkinsCreateRelease> {
-        @Override
-        public String getDisplayName() {
-            return "JenkinsCreateRelease";
-        }
-
-        @Override
-        public JenkinsCreateRelease newInstance(StaplerRequest req, JSONObject formData) throws FormException {
-            return super.newInstance(req, formData);
-        }
+    public static Test suite() throws Exception {
+        File file = new File("build");
+        System.out.print(file.getAbsolutePath());
+        return JellyTestSuiteBuilder.build(file, true);
     }
 }
-
-

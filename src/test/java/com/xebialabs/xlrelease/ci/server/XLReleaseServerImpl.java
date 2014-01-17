@@ -44,6 +44,10 @@ import com.xebialabs.xlrelease.ci.util.CreateReleaseView;
 import com.xebialabs.xlrelease.ci.util.ReleaseFullView;
 import com.xebialabs.xlrelease.ci.util.TemplateVariable;
 
+
+/**
+ * This is a mock class! We need this because the combination of PowerMock and JenkinsRule is not possible.
+ */
 public class XLReleaseServerImpl implements XLReleaseServer {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(XLReleaseServerImpl.class);
@@ -63,15 +67,6 @@ public class XLReleaseServerImpl implements XLReleaseServer {
 
     @Override
     public void newCommunicator() {
-        // setup REST-Client
-        ClientConfig config = new DefaultClientConfig();
-        Client client = Client.create(config);
-        client.addFilter( new HTTPBasicAuthFilter(user, password) );
-        WebResource service = client.resource(serverUrl);
-
-        LoggerFactory.getLogger(this.getClass()).info("Check that XL Release is running");
-        String xlrelease = service.path("releases").accept(MediaType.APPLICATION_JSON).get(ClientResponse.class).toString();
-        LoggerFactory.getLogger(this.getClass()).info(xlrelease + "\n");
 
     }
 
@@ -98,39 +93,16 @@ public class XLReleaseServerImpl implements XLReleaseServer {
 
     @Override
     public List<ReleaseFullView> getAllTemplates() {
-        // setup REST-Client
-        ClientConfig config = new DefaultClientConfig();
-        config.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
-        Client client = Client.create(config);
-        client.addFilter( new HTTPBasicAuthFilter(user, password) );
-        WebResource service = client.resource(serverUrl);
+        List<ReleaseFullView> result = new ArrayList<ReleaseFullView>();
+        result.add(new ReleaseFullView("someid","atemplate",null));
 
-        LoggerFactory.getLogger(this.getClass()).info("Get all the templates");
-        GenericType<List<ReleaseFullView>> genericType =
-                new GenericType<List<ReleaseFullView>>() {};
-        return service.path("releases").path("templates").accept(MediaType.APPLICATION_JSON).get(genericType);
+        return result;
+
     }
 
     @Override
     public ReleaseFullView createRelease(final String resolvedTemplate, final String resolvedVersion, final List<NameValuePair> variables) {
-        // POST /releases/
-        LoggerFactory.getLogger(this.getClass()).info("Create a release for " + resolvedTemplate);
-        // setup REST-Client
-        ClientConfig config = new DefaultClientConfig();
-        config.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
-        Client client = Client.create(config);
-        client.addFilter( new HTTPBasicAuthFilter(user, password) );
-        WebResource service = client.resource(serverUrl);
-
-        GenericType<ReleaseFullView> genericType =
-                new GenericType<ReleaseFullView>() {};
-
-
-        CreateReleaseView createReleaseView = new CreateReleaseView(getTemplateId(resolvedTemplate), resolvedVersion, convertToTemplateVariables(variables));
-
-        ReleaseFullView result = service.path("releases").type(MediaType.APPLICATION_JSON).post(genericType, createReleaseView);
-
-        return result;
+        return new ReleaseFullView("someid","atemplate",null);
     }
 
     private String getTemplateId(final String resolvedTemplate) {
@@ -157,16 +129,6 @@ public class XLReleaseServerImpl implements XLReleaseServer {
 
     @Override
     public void startRelease(final String releaseId) {
-        //POST /releases/{releaseId}/start
-        LoggerFactory.getLogger(this.getClass()).info("Start the release for: " + releaseId);
 
-        // setup REST-Client
-        ClientConfig config = new DefaultClientConfig();
-        config.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
-        Client client = Client.create(config);
-        client.addFilter( new HTTPBasicAuthFilter(user, password) );
-        WebResource service = client.resource(serverUrl);
-
-        service.path("releases").path(releaseId).path("start").type(MediaType.APPLICATION_JSON).post();
     }
 }

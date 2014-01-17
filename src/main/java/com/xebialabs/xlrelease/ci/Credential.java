@@ -26,6 +26,7 @@ package com.xebialabs.xlrelease.ci;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import com.google.common.base.Function;
