@@ -234,11 +234,17 @@ public class XLReleaseNotifier extends Notifier {
             List<ReleaseFullView> candidates = getXLReleaseServer(credential).searchTemplates(value);
             for (ReleaseFullView candidate : candidates) {
                 if (candidate.getTitle().equals(value)) {
+                    candidate.setVariables(getVariables(credential, candidate));
                     return candidate;
                 }
             }
             return null;
 
+        }
+
+        private List<TemplateVariable> getVariables(String credential, ReleaseFullView releaseFullView) {
+            List<TemplateVariable> variables = getXLReleaseServer(credential).getVariables(releaseFullView.getId());
+            return variables;
         }
 
         public ListBoxModel doFillTemplateItems(@QueryParameter String credential) {
@@ -309,11 +315,11 @@ public class XLReleaseNotifier extends Notifier {
         }
 
         public int getNumberOfVariables(@QueryParameter String credential, @QueryParameter String template) {
-            this.releaseFullView = getTemplate(credential, template);
-            if (releaseFullView == null || CollectionUtils.isEmpty(releaseFullView.getVariables())) {
+            Collection<TemplateVariable> variables = getVariablesOf(credential,template);
+            if (CollectionUtils.isEmpty(variables)) {
                 return 0;
             }
-            return this.releaseFullView.getVariables().size();
+            return variables.size();
         }
 
 

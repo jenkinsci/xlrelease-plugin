@@ -23,7 +23,9 @@
 
 package com.xebialabs.xlrelease.ci.server;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 import javax.ws.rs.core.MediaType;
 
@@ -116,6 +118,21 @@ public class XLReleaseServerImpl implements XLReleaseServer {
     }
 
     @Override
+    public List<TemplateVariable> getVariables(String templateId) {
+        // setup REST-Client
+        ClientConfig config = new DefaultClientConfig();
+        config.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
+        Client client = Client.create(config);
+        client.addFilter( new HTTPBasicAuthFilter(user, password) );
+        WebResource service = client.resource(serverUrl);
+
+        LoggerFactory.getLogger(this.getClass()).info("Get all the variables");
+        GenericType<List<TemplateVariable>> genericType =
+                new GenericType<List<TemplateVariable>>() {};
+        return service.path("releases").path(templateId).path("updatable-variables").accept(MediaType.APPLICATION_JSON).get(genericType);
+    }
+
+    @Override
     public ReleaseFullView createRelease(final String resolvedTemplate, final String resolvedVersion, final List<NameValuePair> variables) {
         // POST /releases/
         LoggerFactory.getLogger(this.getClass()).info("Create a release for " + resolvedTemplate);
@@ -134,8 +151,13 @@ public class XLReleaseServerImpl implements XLReleaseServer {
         GenericType<ReleaseFullView> genericType =
                 new GenericType<ReleaseFullView>() {};
 
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+        String scheduledStartDate = format.format(Calendar.getInstance().getTime());
 
-        CreateReleaseView createReleaseView = new CreateReleaseView(getTemplateId(resolvedTemplate), resolvedVersion, convertToTemplateVariables(variables), "2014-09-29T15:00:00.000Z", "2014-09-04T15:00:00.000Z");
+        Calendar dueDate = Calendar.getInstance();
+        dueDate.add(Calendar.DATE, 1);
+        String scheduledDueDate = format.format(dueDate.getTime());
+        CreateReleaseView createReleaseView = new CreateReleaseView(getTemplateId(resolvedTemplate), resolvedVersion, convertToTemplateVariables(variables), scheduledDueDate, scheduledStartDate);
 
         ReleaseFullView result = service.path("releases").type(MediaType.APPLICATION_JSON).post(genericType, createReleaseView);
 
