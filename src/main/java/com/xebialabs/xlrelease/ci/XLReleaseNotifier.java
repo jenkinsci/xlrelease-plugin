@@ -98,8 +98,10 @@ public class XLReleaseNotifier extends Notifier {
 
 
         List<NameValuePair> resolvedVariables = new ArrayList<NameValuePair>();
-        for (NameValuePair nameValuePair : variables) {
-            resolvedVariables.add(new NameValuePair(nameValuePair.propertyName, envVars.expand(nameValuePair.propertyValue)));
+        if (CollectionUtils.isNotEmpty(variables)) {
+            for (NameValuePair nameValuePair : variables) {
+                resolvedVariables.add(new NameValuePair(nameValuePair.propertyName, envVars.expand(nameValuePair.propertyValue)));
+            }
         }
 
         // createRelease

@@ -32,14 +32,18 @@ public class CreateReleaseView {
     private List<TemplateVariable> variables;
     private String templateId;
     private String title;
+    private String dueDate;
+    private String scheduledStartDate;
 
     public CreateReleaseView() {
     }
 
-    public CreateReleaseView(final String templateId, final String title, final List<TemplateVariable> variables) {
+    public CreateReleaseView(final String templateId, final String title, final List<TemplateVariable> variables, final String dueDate, final String scheduledStartDate) {
         this.variables = variables;
         this.templateId = templateId;
         this.title = title;
+        this.dueDate = dueDate;
+        this.scheduledStartDate = scheduledStartDate;
     }
 
     public List<TemplateVariable> getVariables() {
@@ -64,5 +68,21 @@ public class CreateReleaseView {
 
     public void setTitle(final String title) {
         this.title = title;
+    }
+
+    public String getDueDate() {
+        return dueDate;
+    }
+
+    public void setDueDate(String dueDate) {
+        this.dueDate = dueDate;
+    }
+
+     public String getScheduledStartDate() {
+        return scheduledStartDate;
+    }
+
+    public void setScheduledStartDate(String scheduledStartDate) {
+        this.scheduledStartDate = scheduledStartDate;
     }
 }

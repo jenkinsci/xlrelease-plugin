@@ -26,6 +26,8 @@ package com.xebialabs.xlrelease.ci.server;
 import java.util.ArrayList;
 import java.util.List;
 import javax.ws.rs.core.MediaType;
+
+import com.xebialabs.xlrelease.ci.util.ObjectMapperProvider;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Predicate;
 import org.slf4j.Logger;
@@ -38,6 +40,8 @@ import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import com.sun.jersey.api.json.JSONConfiguration;
+
+import org.codehaus.jackson.jaxrs.JacksonJaxbJsonProvider;
 
 import com.xebialabs.xlrelease.ci.NameValuePair;
 import com.xebialabs.xlrelease.ci.util.CreateReleaseView;
@@ -118,6 +122,11 @@ public class XLReleaseServerImpl implements XLReleaseServer {
         // setup REST-Client
         ClientConfig config = new DefaultClientConfig();
         config.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
+
+        JacksonJaxbJsonProvider jacksonProvider = new JacksonJaxbJsonProvider();
+        jacksonProvider.setMapper((new ObjectMapperProvider()).getMapper());
+        config.getSingletons().add(jacksonProvider);
+
         Client client = Client.create(config);
         client.addFilter( new HTTPBasicAuthFilter(user, password) );
         WebResource service = client.resource(serverUrl);
@@ -126,7 +135,7 @@ public class XLReleaseServerImpl implements XLReleaseServer {
                 new GenericType<ReleaseFullView>() {};
 
 
-        CreateReleaseView createReleaseView = new CreateReleaseView(getTemplateId(resolvedTemplate), resolvedVersion, convertToTemplateVariables(variables));
+        CreateReleaseView createReleaseView = new CreateReleaseView(getTemplateId(resolvedTemplate), resolvedVersion, convertToTemplateVariables(variables), "2014-09-29T15:00:00.000Z", "2014-09-04T15:00:00.000Z");
 
         ReleaseFullView result = service.path("releases").type(MediaType.APPLICATION_JSON).post(genericType, createReleaseView);
 
