@@ -28,10 +28,9 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import javax.ws.rs.core.MediaType;
-
-import com.xebialabs.xlrelease.ci.util.ObjectMapperProvider;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Predicate;
+import org.codehaus.jackson.jaxrs.JacksonJaxbJsonProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.sun.jersey.api.client.Client;
@@ -43,12 +42,13 @@ import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import com.sun.jersey.api.json.JSONConfiguration;
 
-import org.codehaus.jackson.jaxrs.JacksonJaxbJsonProvider;
-
 import com.xebialabs.xlrelease.ci.NameValuePair;
 import com.xebialabs.xlrelease.ci.util.CreateReleaseView;
+import com.xebialabs.xlrelease.ci.util.ObjectMapperProvider;
 import com.xebialabs.xlrelease.ci.util.ReleaseFullView;
 import com.xebialabs.xlrelease.ci.util.TemplateVariable;
+
+import static javax.ws.rs.core.Response.Status.Family.SUCCESSFUL;
 
 public class XLReleaseServerImpl implements XLReleaseServer {
 
@@ -76,9 +76,13 @@ public class XLReleaseServerImpl implements XLReleaseServer {
         WebResource service = client.resource(serverUrl);
 
         LoggerFactory.getLogger(this.getClass()).info("Check that XL Release is running");
-        String xlrelease = service.path("releases").accept(MediaType.APPLICATION_JSON).get(ClientResponse.class).toString();
-        LoggerFactory.getLogger(this.getClass()).info(xlrelease + "\n");
+        ClientResponse response = service.path("profile").accept(MediaType.APPLICATION_JSON).get(ClientResponse.class);
 
+        if (response.getStatusInfo().getFamily() != SUCCESSFUL) {
+            throw new IllegalStateException(response.getStatusInfo().getReasonPhrase());
+        }
+        String xlrelease = response.toString();
+        LoggerFactory.getLogger(this.getClass()).info(xlrelease + "\n");
     }
 
     @Override
@@ -159,9 +163,13 @@ public class XLReleaseServerImpl implements XLReleaseServer {
         String scheduledDueDate = format.format(dueDate.getTime());
         CreateReleaseView createReleaseView = new CreateReleaseView(getTemplateId(resolvedTemplate), resolvedVersion, convertToTemplateVariables(variables), scheduledDueDate, scheduledStartDate);
 
-        ReleaseFullView result = service.path("releases").type(MediaType.APPLICATION_JSON).post(genericType, createReleaseView);
+        ClientResponse response = service.path("releases").type(MediaType.APPLICATION_JSON).post(ClientResponse.class, createReleaseView);
+        if (response.getStatusInfo().getFamily() != SUCCESSFUL) {
+            String errorReason = response.getEntity(String.class);
+            throw new IllegalStateException(errorReason);
+        }
 
-        return result;
+        return response.getEntity(genericType);
     }
 
     private String getTemplateId(final String resolvedTemplate) {

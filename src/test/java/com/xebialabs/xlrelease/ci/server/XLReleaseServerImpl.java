@@ -25,22 +25,12 @@ package com.xebialabs.xlrelease.ci.server;
 
 import java.util.ArrayList;
 import java.util.List;
-import javax.ws.rs.core.MediaType;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Predicate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.GenericType;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.config.ClientConfig;
-import com.sun.jersey.api.client.config.DefaultClientConfig;
-import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
-import com.sun.jersey.api.json.JSONConfiguration;
 
 import com.xebialabs.xlrelease.ci.NameValuePair;
-import com.xebialabs.xlrelease.ci.util.CreateReleaseView;
 import com.xebialabs.xlrelease.ci.util.ReleaseFullView;
 import com.xebialabs.xlrelease.ci.util.TemplateVariable;
 
@@ -98,6 +88,11 @@ public class XLReleaseServerImpl implements XLReleaseServer {
 
         return result;
 
+    }
+
+    @Override
+    public List<TemplateVariable> getVariables(String templateId) {
+        return null;
     }
 
     @Override
