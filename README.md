@@ -9,11 +9,11 @@ There are following targets defined:
 
 Builds **.hpi** file
 
-    gradle jpi
+    ./gradlew jpi
 
 Run development server:
 
-    gradle server
+    ./gradlew server
 
 ###Debugging###
 
