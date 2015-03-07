@@ -45,7 +45,7 @@ import com.sun.jersey.api.json.JSONConfiguration;
 import com.xebialabs.xlrelease.ci.NameValuePair;
 import com.xebialabs.xlrelease.ci.util.CreateReleaseView;
 import com.xebialabs.xlrelease.ci.util.ObjectMapperProvider;
-import com.xebialabs.xlrelease.ci.util.ReleaseFullView;
+import com.xebialabs.xlrelease.ci.util.Release;
 import com.xebialabs.xlrelease.ci.util.TemplateVariable;
 
 import static javax.ws.rs.core.Response.Status.Family.SUCCESSFUL;
@@ -91,12 +91,12 @@ public class XLReleaseServerImpl implements XLReleaseServer {
     }
 
     @Override
-    public List<ReleaseFullView> searchTemplates(final String s) {
-        List<ReleaseFullView> templates = getAllTemplates();
+    public List<Release> searchTemplates(final String s) {
+        List<Release> templates = getAllTemplates();
 
         CollectionUtils.filter(templates, new Predicate() {
             public boolean evaluate(Object o) {
-               if (((ReleaseFullView)o).getTitle().contains(s))
+               if (((Release)o).getTitle().contains(s))
                    return true;
                return false;
             }
@@ -107,7 +107,7 @@ public class XLReleaseServerImpl implements XLReleaseServer {
     }
 
     @Override
-    public List<ReleaseFullView> getAllTemplates() {
+    public List<Release> getAllTemplates() {
         // setup REST-Client
         ClientConfig config = new DefaultClientConfig();
         config.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
@@ -116,9 +116,9 @@ public class XLReleaseServerImpl implements XLReleaseServer {
         WebResource service = client.resource(serverUrl);
 
         LoggerFactory.getLogger(this.getClass()).info("Get all the templates");
-        GenericType<List<ReleaseFullView>> genericType =
-                new GenericType<List<ReleaseFullView>>() {};
-        return service.path("releases").path("templates").accept(MediaType.APPLICATION_JSON).get(genericType);
+        GenericType<List<Release>> genericType =
+                new GenericType<List<Release>>() {};
+        return service.path("api").path("v1").path("templates").accept(MediaType.APPLICATION_JSON).get(genericType);
     }
 
     @Override
@@ -130,14 +130,14 @@ public class XLReleaseServerImpl implements XLReleaseServer {
         client.addFilter( new HTTPBasicAuthFilter(user, password) );
         WebResource service = client.resource(serverUrl);
 
-        LoggerFactory.getLogger(this.getClass()).info("Get all the variables");
+        LoggerFactory.getLogger(this.getClass()).info("Get variables for " + templateId);
         GenericType<List<TemplateVariable>> genericType =
                 new GenericType<List<TemplateVariable>>() {};
         return service.path("releases").path(templateId).path("updatable-variables").accept(MediaType.APPLICATION_JSON).get(genericType);
     }
 
     @Override
-    public ReleaseFullView createRelease(final String resolvedTemplate, final String resolvedVersion, final List<NameValuePair> variables) {
+    public Release createRelease(final String resolvedTemplate, final String resolvedVersion, final List<NameValuePair> variables) {
         // POST /releases/
         LoggerFactory.getLogger(this.getClass()).info("Create a release for " + resolvedTemplate);
         // setup REST-Client
@@ -152,8 +152,8 @@ public class XLReleaseServerImpl implements XLReleaseServer {
         client.addFilter( new HTTPBasicAuthFilter(user, password) );
         WebResource service = client.resource(serverUrl);
 
-        GenericType<ReleaseFullView> genericType =
-                new GenericType<ReleaseFullView>() {};
+        GenericType<Release> genericType =
+                new GenericType<Release>() {};
 
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
         String scheduledStartDate = format.format(Calendar.getInstance().getTime());
@@ -161,7 +161,7 @@ public class XLReleaseServerImpl implements XLReleaseServer {
         Calendar dueDate = Calendar.getInstance();
         dueDate.add(Calendar.DATE, 1);
         String scheduledDueDate = format.format(dueDate.getTime());
-        CreateReleaseView createReleaseView = new CreateReleaseView(getTemplateId(resolvedTemplate), resolvedVersion, convertToTemplateVariables(variables), scheduledDueDate, scheduledStartDate);
+        CreateReleaseView createReleaseView = new CreateReleaseView(getTemplateInternalId(resolvedTemplate), resolvedVersion, convertToTemplateVariables(variables), scheduledDueDate, scheduledStartDate);
 
         ClientResponse response = service.path("releases").type(MediaType.APPLICATION_JSON).post(ClientResponse.class, createReleaseView);
         if (response.getStatusInfo().getFamily() != SUCCESSFUL) {
@@ -172,17 +172,17 @@ public class XLReleaseServerImpl implements XLReleaseServer {
         return response.getEntity(genericType);
     }
 
-    private String getTemplateId(final String resolvedTemplate) {
-        List<ReleaseFullView> templates = searchTemplates(resolvedTemplate);
+    private String getTemplateInternalId(final String resolvedTemplate) {
+        List<Release> templates = searchTemplates(resolvedTemplate);
         CollectionUtils.filter(templates, new Predicate() {
             public boolean evaluate(Object o) {
-                if (((ReleaseFullView)o).getTitle().equals(resolvedTemplate))
+                if (((Release)o).getTitle().equals(resolvedTemplate))
                     return true;
                 return false;
             }
         });
 
-        return templates.get(0).getId();
+        return templates.get(0).getInternalId();
     }
 
     private List<TemplateVariable> convertToTemplateVariables(final List<NameValuePair> variables) {

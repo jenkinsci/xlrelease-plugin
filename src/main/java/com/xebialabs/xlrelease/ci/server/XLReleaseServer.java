@@ -26,7 +26,7 @@ package com.xebialabs.xlrelease.ci.server;
 import java.util.List;
 
 import com.xebialabs.xlrelease.ci.NameValuePair;
-import com.xebialabs.xlrelease.ci.util.ReleaseFullView;
+import com.xebialabs.xlrelease.ci.util.Release;
 import com.xebialabs.xlrelease.ci.util.TemplateVariable;
 
 public interface XLReleaseServer {
@@ -34,13 +34,12 @@ public interface XLReleaseServer {
 
     Object getVersion();
 
-    List<ReleaseFullView> searchTemplates(String s);
-    List<ReleaseFullView> getAllTemplates();
+    List<Release> searchTemplates(String s);
+    List<Release> getAllTemplates();
 
     List<TemplateVariable> getVariables(String templateId);
 
-
-    ReleaseFullView createRelease(String resolvedTemplate, String resolvedVersion, List<NameValuePair> variables);
+    Release createRelease(String resolvedTemplate, String resolvedVersion, List<NameValuePair> variables);
 
     void startRelease(String releaseId);
 }

@@ -24,9 +24,7 @@
 package com.xebialabs.xlrelease.ci;
 
 
-import java.util.Collection;
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.Transformer;
+import java.util.Map;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
@@ -41,6 +39,7 @@ import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
 
 import static com.xebialabs.xlrelease.ci.XLReleaseNotifier.XLReleaseDescriptor;
+import static com.xebialabs.xlrelease.ci.util.ListBoxModels.emptyModel;
 
 public class NameValuePair extends AbstractDescribableImpl<NameValuePair> {
 
@@ -62,14 +61,11 @@ public class NameValuePair extends AbstractDescribableImpl<NameValuePair> {
 
         public ListBoxModel doFillPropertyNameItems(@QueryParameter @RelativePath(value = "..") String credential,
                 @QueryParameter @RelativePath(value = "..") String template) {
-            Collection<TemplateVariable> properties = getXLReleaseDescriptor().getVariablesOf(credential, template);
-            Collection<String> keys = CollectionUtils.collect(properties, new Transformer() {
-                @Override
-                public Object transform(final Object input) {
-                    return ((TemplateVariable)input).getKey();
-                }
-            });
-            return ListBoxModels.of(keys);
+            Map<String, String> variables = getXLReleaseDescriptor().getVariablesOf(credential, template);
+            if (variables == null) {
+                return emptyModel();
+            }
+            return ListBoxModels.of(variables.keySet());
         }
 
         protected XLReleaseDescriptor getXLReleaseDescriptor() {
