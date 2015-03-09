@@ -105,10 +105,14 @@ configurations.all {
     }
 }
 
-task test(type:Exec, overwrite:true) {
-
-    commandLine 'mvn', 'clean', 'test'
+// Replace Gradle test with Maven test
+task mvnTest(type:Exec) {
+  commandLine 'mvn', 'clean', 'test'
 }
+test {
+  actions = []
+}
+test.dependsOn mvnTest
 
 dependencies {
     compile "com.google.guava:guava:13.0"
