@@ -106,12 +106,14 @@ public class XLReleaseNotifier extends Notifier {
 
         // createRelease
         Release release = null;
-        if (variables != null || startRelease)
+        if (variables != null || startRelease) {
             release = createRelease(template,resolvedVersion, resolvedVariables, deploymentListener);
 
-        // startRelease
-        if (startRelease)
-            startRelease(release, template,resolvedVersion, deploymentListener);
+            // startRelease
+            if (startRelease) {
+                startRelease(release, template,resolvedVersion, deploymentListener);
+            }
+        }
 
         return true;
     }
