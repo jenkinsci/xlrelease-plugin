@@ -1,6 +1,6 @@
 #Requirements#
 
-Minimal version XLR 4.0.9+
+This plugin requires XL Release version 4.5.0. For older versions of XL Release please use version [4.0.11](http://updates.jenkins-ci.org/download/plugins/xlrelease-plugin/4.0.11/xlrelease-plugin.hpi) of this plugin.
 
 #Build#
 The Jenkins plugin build is powered by the <a href="https://github.com/jenkinsci/gradle-jpi-plugin">gradle-jpi-plugin</a> (see its <a href="https://wiki.jenkins-ci.org/display/JENKINS/Gradle+JPI+Plugin">documentation</a>).
