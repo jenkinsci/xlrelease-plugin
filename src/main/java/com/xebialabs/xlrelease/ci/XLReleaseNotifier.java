@@ -315,11 +315,13 @@ public class XLReleaseNotifier extends Notifier {
         }
 
         public int getNumberOfVariables(@QueryParameter String credential, @QueryParameter String template) {
-            Map<String, String> variables = getVariablesOf(credential,template);
-            if (variables == null) {
-                return 0;
+            if (credential != null) {
+                Map<String, String> variables = getVariablesOf(credential,template);
+                if (variables != null) {
+                    return variables.size();
+                }
             }
-            return variables.size();
+            return 0;
         }
 
 
