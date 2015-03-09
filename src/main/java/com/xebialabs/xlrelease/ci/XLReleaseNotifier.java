@@ -300,12 +300,6 @@ public class XLReleaseNotifier extends Notifier {
         }
 
 
-        private Credential getDefaultCredential() {
-            if (credentials.isEmpty())
-                throw new RuntimeException("No credentials defined in the system configuration");
-            return credentials.iterator().next();
-        }
-
         public Map<String, String> getVariablesOf(final String credential, final String template) {
             release = getTemplate(credential, template);
             if (release == null) {
