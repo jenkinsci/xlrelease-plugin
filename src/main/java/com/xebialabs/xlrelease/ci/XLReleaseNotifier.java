@@ -39,7 +39,7 @@ import com.google.common.base.Strings;
 import com.xebialabs.xlrelease.ci.server.XLReleaseServer;
 import com.xebialabs.xlrelease.ci.server.XLReleaseServerFactory;
 import com.xebialabs.xlrelease.ci.util.JenkinsReleaseListener;
-import com.xebialabs.xlrelease.ci.util.ReleaseFullView;
+import com.xebialabs.xlrelease.ci.util.Release;
 import com.xebialabs.xlrelease.ci.util.TemplateVariable;
 
 import hudson.EnvVars;
@@ -105,31 +105,31 @@ public class XLReleaseNotifier extends Notifier {
         }
 
         // createRelease
-        ReleaseFullView releaseFullView = null;
+        Release release = null;
         if (variables != null || startRelease)
-            releaseFullView = createRelease(template,resolvedVersion, resolvedVariables, deploymentListener);
+            release = createRelease(template,resolvedVersion, resolvedVariables, deploymentListener);
 
         // startRelease
         if (startRelease)
-            startRelease(releaseFullView, template,resolvedVersion, deploymentListener);
+            startRelease(release, template,resolvedVersion, deploymentListener);
 
         return true;
     }
 
-    private ReleaseFullView createRelease(final String resolvedTemplate, final String resolvedVersion, final List<NameValuePair> resolvedVariables, final JenkinsReleaseListener deploymentListener) {
+    private Release createRelease(final String resolvedTemplate, final String resolvedVersion, final List<NameValuePair> resolvedVariables, final JenkinsReleaseListener deploymentListener) {
         deploymentListener.info(Messages.XLReleaseNotifier_createRelease(resolvedTemplate, resolvedVersion));
 
         // create a new release instance
-        ReleaseFullView releaseFullView = getXLReleaseServer().createRelease(resolvedTemplate, resolvedVersion, resolvedVariables);
-        return releaseFullView;
+        Release release = getXLReleaseServer().createRelease(resolvedTemplate, resolvedVersion, resolvedVariables);
+        return release;
 
     }
 
-    private void startRelease(final ReleaseFullView releaseFullView, final String resolvedTemplate, final String resolvedVersion, final JenkinsReleaseListener deploymentListener) {
+    private void startRelease(final Release release, final String resolvedTemplate, final String resolvedVersion, final JenkinsReleaseListener deploymentListener) {
         deploymentListener.info(Messages.XLReleaseNotifier_startRelease(resolvedTemplate, resolvedVersion));
 
         // start the release
-        getXLReleaseServer().startRelease(releaseFullView.getId());
+        getXLReleaseServer().startRelease(release.getInternalId());
     }
 
 
@@ -157,7 +157,7 @@ public class XLReleaseNotifier extends Notifier {
 
         private final transient Map<String,XLReleaseServer> credentialServerMap = newHashMap();
 
-        private ReleaseFullView releaseFullView;
+        private Release release;
 
         public XLReleaseDescriptor() {
             load();  //deserialize from xml
@@ -220,8 +220,8 @@ public class XLReleaseNotifier extends Notifier {
 
         public FormValidation doCheckTemplate(@QueryParameter String credential, @QueryParameter final String value, @AncestorInPath AbstractProject project) {
             try {
-                this.releaseFullView = getTemplate(credential,value);
-                if(this.releaseFullView != null) {
+                this.release = getTemplate(credential,value);
+                if(this.release != null) {
                     return warning("Changing template may unintentionally change your variables");
                 }
                 return warning("Template does not exist.");
@@ -230,11 +230,11 @@ public class XLReleaseNotifier extends Notifier {
             }
         }
 
-        private ReleaseFullView getTemplate(String credential, String value) {
-            List<ReleaseFullView> candidates = getXLReleaseServer(credential).searchTemplates(value);
-            for (ReleaseFullView candidate : candidates) {
+        private Release getTemplate(String credential, String value) {
+            List<Release> candidates = getXLReleaseServer(credential).searchTemplates(value);
+            for (Release candidate : candidates) {
                 if (candidate.getTitle().equals(value)) {
-                    candidate.setVariables(getVariables(credential, candidate));
+                    candidate.setVariableValues(getVariables(credential, candidate));
                     return candidate;
                 }
             }
@@ -242,18 +242,18 @@ public class XLReleaseNotifier extends Notifier {
 
         }
 
-        private List<TemplateVariable> getVariables(String credential, ReleaseFullView releaseFullView) {
-            List<TemplateVariable> variables = getXLReleaseServer(credential).getVariables(releaseFullView.getId());
-            return variables;
+        private Map<String, String> getVariables(String credential, Release release) {
+            List<TemplateVariable> variables = getXLReleaseServer(credential).getVariables(release.getInternalId());
+            return TemplateVariable.<TemplateVariable>toMap(variables);
         }
 
         public ListBoxModel doFillTemplateItems(@QueryParameter String credential) {
             try {
-                List<ReleaseFullView> templates = getXLReleaseServer(credential).getAllTemplates();
+                List<Release> templates = getXLReleaseServer(credential).getAllTemplates();
 
                 Collection<String> titles = CollectionUtils.collect(templates, new Transformer() {
                     public Object transform(Object o) {
-                        return ((ReleaseFullView) o).getTitle();
+                        return ((Release) o).getTitle();
                     }
                 });
 
@@ -300,26 +300,22 @@ public class XLReleaseNotifier extends Notifier {
         }
 
 
-        private Credential getDefaultCredential() {
-            if (credentials.isEmpty())
-                throw new RuntimeException("No credentials defined in the system configuration");
-            return credentials.iterator().next();
-        }
-
-        public Collection<TemplateVariable> getVariablesOf(final String credential, final String template) {
-            this.releaseFullView = getTemplate(credential, template);
-            if (releaseFullView == null) {
-                return Collections.emptyList();
+        public Map<String, String> getVariablesOf(final String credential, final String template) {
+            release = getTemplate(credential, template);
+            if (release == null) {
+                return Collections.emptyMap();
             }
-            return releaseFullView.getVariables();
+            return release.getVariableValues();
         }
 
         public int getNumberOfVariables(@QueryParameter String credential, @QueryParameter String template) {
-            Collection<TemplateVariable> variables = getVariablesOf(credential,template);
-            if (CollectionUtils.isEmpty(variables)) {
-                return 0;
+            if (credential != null) {
+                Map<String, String> variables = getVariablesOf(credential,template);
+                if (variables != null) {
+                    return variables.size();
+                }
             }
-            return variables.size();
+            return 0;
         }
 
 

@@ -24,24 +24,24 @@
 package com.xebialabs.xlrelease.ci.util;
 
 
-import java.util.List;
+import java.util.Map;
 import javax.xml.bind.annotation.XmlRootElement;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
 @XmlRootElement
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class ReleaseFullView {
+public class Release {
     private String id;
     private String title;
-    private List<TemplateVariable> variables;
+    private Map<String, String> variableValues;
 
-    public ReleaseFullView() {
+    public Release() {
     }
 
-    public ReleaseFullView(final String id, final String title, final List<TemplateVariable> variables) {
+    public Release(final String id, final String title, final Map<String, String> variableValues) {
         this.id = id;
         this.title = title;
-        this.variables = variables;
+        this.variableValues = variableValues;
     }
 
     public String getId() {
@@ -60,17 +60,21 @@ public class ReleaseFullView {
         this.title = title;
     }
 
-    public List<TemplateVariable> getVariables() {
-        return variables;
+    public Map<String, String> getVariableValues() {
+        return variableValues;
     }
 
-    public void setVariables(final List<TemplateVariable> variables) {
-        this.variables = variables;
+    public void setVariableValues(final Map<String, String> variableValues) {
+        this.variableValues = variableValues;
+    }
+
+    public String getInternalId() {
+        return (id != null) ? id.replace("Applications/", "") : null;
     }
 
     @Override
     public String toString() {
-        return "ReleaseFullView{" +
+        return "Release{" +
                 "id='" + id + '\'' +
                 ", title='" + title + '\'' +
                 '}';
@@ -81,7 +85,7 @@ public class ReleaseFullView {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        final ReleaseFullView that = (ReleaseFullView) o;
+        final Release that = (Release) o;
 
         if (title != null ? !title.equals(that.title) : that.title != null) return false;
 

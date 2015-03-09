@@ -23,6 +23,10 @@
 
 package com.xebialabs.xlrelease.ci.util;
 
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.xml.bind.annotation.XmlRootElement;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
@@ -55,5 +59,13 @@ public class TemplateVariable {
 
     public void setValue(final String value) {
         this.value = value;
+    }
+
+    public static Map<String, String> toMap(Collection<? extends TemplateVariable> variables) {
+        Map<String, String> result = new HashMap<String, String>();
+        for (TemplateVariable variable : variables) {
+            result.put(variable.getKey(), variable.getValue());
+        }
+        return result;
     }
 }
