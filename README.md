@@ -17,6 +17,16 @@ Run development server:
 
 ###Debugging###
 
-Debuggins is configured with GRADLE_OPTIONS env variable.
+Debugging is configured with GRADLE_OPTIONS env variable.
 
     GRADLE_OPTS="${GRADLE_OPTS} -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5006" ./gradlew clean server
+
+###Testing###
+
+Running integration testing can be done using
+    
+    gradle test
+
+This uses the `mvn test` because of the following issues with the gradle jpi plugin
+https://issues.jenkins-ci.org/browse/JENKINS-17129
+https://issues.jenkins-ci.org/browse/JENKINS-19942
