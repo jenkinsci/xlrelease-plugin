@@ -61,13 +61,13 @@ buildscript {
 
     }
     dependencies {
-        classpath 'org.jenkins-ci.tools:gradle-jpi-plugin:0.4.0'
+        classpath 'org.jenkins-ci.tools:gradle-jpi-plugin:0.10.0'
     }
 }
 
 
 jenkinsPlugin {
-    coreVersion = '1.509.4' // we need to support LTS versions
+    coreVersion = '1.596.1' // we need to support LTS versions
     displayName = "XebiaLabs XL Release Plugin"
     url = 'https://wiki.jenkins-ci.org/display/JENKINS/XL+Release+Plugin'
     gitHubUrl = 'https://github.com/jenkinsci/XL+Release-plugin'
@@ -105,15 +105,6 @@ configurations.all {
     }
 }
 
-// Replace Gradle test with Maven test
-task mvnTest(type:Exec) {
-  commandLine 'mvn', 'clean', 'test'
-}
-test {
-  actions = []
-}
-test.dependsOn mvnTest
-
 dependencies {
     compile "com.google.guava:guava:13.0"
     compile "com.sun.jersey:jersey-client:1.18"
@@ -132,4 +123,10 @@ dependencies {
     testCompile "org.powermock:powermock-api-mockito:1.5.3"
     testCompile "org.mockito:mockito-all:1.9.5"
 
+    testCompile "org.jenkins-ci.modules:launchd-slave-installer:1.2@jm"
+    testCompile "org.jenkins-ci.modules:systemd-slave-installer:1.1@jm"
+}
+configurations {
+    all*.exclude group: 'org.jenkins-ci.modules', module: 'launchd-slave-installer'
+    all*.exclude group: 'org.jenkins-ci.modules', module: 'systemd-slave-installer'
 }
