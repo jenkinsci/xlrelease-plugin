@@ -31,7 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.xebialabs.xlrelease.ci.NameValuePair;
-import com.xebialabs.xlrelease.ci.util.ReleaseFullView;
+import com.xebialabs.xlrelease.ci.util.Release;
 import com.xebialabs.xlrelease.ci.util.TemplateVariable;
 
 
@@ -66,12 +66,12 @@ public class XLReleaseServerImpl implements XLReleaseServer {
     }
 
     @Override
-    public List<ReleaseFullView> searchTemplates(final String s) {
-        List<ReleaseFullView> templates = getAllTemplates();
+    public List<Release> searchTemplates(final String s) {
+        List<Release> templates = getAllTemplates();
 
         CollectionUtils.filter(templates, new Predicate() {
             public boolean evaluate(Object o) {
-               if (((ReleaseFullView)o).getTitle().contains(s))
+               if (((Release)o).getTitle().contains(s))
                    return true;
                return false;
             }
@@ -82,9 +82,9 @@ public class XLReleaseServerImpl implements XLReleaseServer {
     }
 
     @Override
-    public List<ReleaseFullView> getAllTemplates() {
-        List<ReleaseFullView> result = new ArrayList<ReleaseFullView>();
-        result.add(new ReleaseFullView("someid","atemplate",null));
+    public List<Release> getAllTemplates() {
+        List<Release> result = new ArrayList<Release>();
+        result.add(new Release("someid","atemplate",null));
 
         return result;
 
@@ -92,19 +92,19 @@ public class XLReleaseServerImpl implements XLReleaseServer {
 
     @Override
     public List<TemplateVariable> getVariables(String templateId) {
-        return null;
+        return new ArrayList<TemplateVariable>();
     }
 
     @Override
-    public ReleaseFullView createRelease(final String resolvedTemplate, final String resolvedVersion, final List<NameValuePair> variables) {
-        return new ReleaseFullView("someid","atemplate",null);
+    public Release createRelease(final String resolvedTemplate, final String resolvedVersion, final List<NameValuePair> variables) {
+        return new Release("someid","atemplate",null);
     }
 
     private String getTemplateId(final String resolvedTemplate) {
-        List<ReleaseFullView> templates = searchTemplates(resolvedTemplate);
+        List<Release> templates = searchTemplates(resolvedTemplate);
         CollectionUtils.filter(templates, new Predicate() {
             public boolean evaluate(Object o) {
-                if (((ReleaseFullView)o).getTitle().equals(resolvedTemplate))
+                if (((Release)o).getTitle().equals(resolvedTemplate))
                     return true;
                 return false;
             }
