@@ -7,18 +7,18 @@
         <f:select/>
     </f:entry>
 
-    <f:entry title="${%Version}" field="version" help="/plugin/xlrelease-plugin/help-version.html">
-            <f:textbox default="Version"/>
+    <f:entry title="${%Name}" field="version" help="/plugin/xlrelease-plugin/help-name.html">
+            <f:textbox default="Release for $BUILD_TAG"/>
         </f:entry>
 
      <f:entry title="${%Variables}" field="variables" >
              <f:repeatable var="variable" field="variables" noAddButton="false" minimum="${descriptor.getNumberOfVariables(instance.credential, instance.template)}">
                  <table width="100%">
-                     <f:entry title="${%Name}" field="propertyName">
+                     <f:entry title="${%Name}" field="propertyName" help="/plugin/xlrelease-plugin/help-variable-name.html">
                          <f:select/>
                      </f:entry>
 
-                     <f:entry title="${%Value}" field="propertyValue">
+                     <f:entry title="${%Value}" field="propertyValue" help="/plugin/xlrelease-plugin/help-variable-value.html">
                          <f:textbox/>
                      </f:entry>
                      <f:entry title="">
@@ -30,7 +30,7 @@
              </f:repeatable>
          </f:entry>
 
-     <f:entry title="${%StartRelease}" field="startRelease">
+     <f:entry title="${%Start release}" field="startRelease" help="/plugin/xlrelease-plugin/help-start-release.html">
             <f:checkbox/>
      </f:entry>
 
