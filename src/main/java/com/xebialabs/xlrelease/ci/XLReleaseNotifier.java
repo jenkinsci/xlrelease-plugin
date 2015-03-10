@@ -242,7 +242,7 @@ public class XLReleaseNotifier extends Notifier {
 
         private Map<String, String> getVariables(String credential, Release release) {
             List<TemplateVariable> variables = getXLReleaseServer(credential).getVariables(release.getInternalId());
-            return TemplateVariable.<TemplateVariable>toMap(variables);
+            return TemplateVariable.toMap(variables);
         }
 
         public ListBoxModel doFillTemplateItems(@QueryParameter String credential) {
