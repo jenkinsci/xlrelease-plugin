@@ -32,25 +32,33 @@ import com.gargoylesoftware.htmlunit.html.HtmlSelect;
 
 import hudson.model.FreeStyleProject;
 
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.junit.Assert.assertThat;
 
 public class XLReleaseNotifierFormITest {
 
+    private static final String USER_VARIABLE = "${user}";
+    private static final String TEMPLATE_NAME = "Welcome to XL Release!";
+    private static final String RELEASE_TITLE = "Release created with jenkins plugin ${BUILD_NUMBER}";
+
     @Rule
-    public JenkinsRule j = new JenkinsRule();
+    public JenkinsRule jenkins = new JenkinsRule();
 
     @Test
     @LocalData
-    public void shouldShowListOfTemplates() throws Exception {
-        FreeStyleProject p = j.createFreeStyleProject();
-        XLReleaseNotifier before = new XLReleaseNotifier("admin_credential", null, null, null, false);
-        p.getPublishersList().add(before);
+    public void shouldShowListOfTemplatesWithSavedAsPreSelected() throws Exception {
+        FreeStyleProject project = jenkins.createFreeStyleProject();
+        XLReleaseNotifier before = new XLReleaseNotifier("admin_credential", TEMPLATE_NAME, RELEASE_TITLE, null, true);
+        project.getPublishersList().add(before);
 
-        HtmlForm xlrForm = j.createWebClient().getPage(p, "configure").getFormByName("config");
+        HtmlForm xlrForm = jenkins.createWebClient().getPage(project, "configure").getFormByName("config");
         HtmlSelect templateSelect = xlrForm.getSelectByName("_.template");
 
-        assertThat(templateSelect.getOptionSize(), greaterThan(0));
+        assertThat(templateSelect.getSelectedOptions().get(0).asText(), equalTo(TEMPLATE_NAME));
+        assertThat(templateSelect.getOptionSize(), greaterThan(1));
+        assertThat(xlrForm.getInputByName("_.version").asText(), equalTo(RELEASE_TITLE));
+        assertThat(xlrForm.getSelectByName("_.propertyName").getSelectedOptions().get(0).asText(), equalTo(USER_VARIABLE));
     }
 
 }
