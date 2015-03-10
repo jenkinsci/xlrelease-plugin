@@ -133,6 +133,8 @@ dependencies {
 
     testCompile "org.jenkins-ci.modules:launchd-slave-installer:1.2@jm"
     testCompile "org.jenkins-ci.modules:systemd-slave-installer:1.1@jm"
+
+    jenkinsTest 'org.jenkins-ci.main:maven-plugin:1.480@jar'
 }
 configurations {
     all*.exclude group: 'org.jenkins-ci.modules', module: 'launchd-slave-installer'
@@ -173,4 +175,15 @@ task itest(type: Test) {
     description = "Run integration tests"
     testClassesDir = project.sourceSets.itest.output.classesDir
     classpath = project.sourceSets.itest.runtimeClasspath
+}
+
+if (project.hasProperty('xlReleaseIntegration.host')) {
+    def host = project.property('xlReleaseIntegration.host')
+    def username = project.property('xlReleaseIntegration.username')
+    def password = project.property('xlReleaseIntegration.password')
+    itest.systemProperties([
+        "xlReleaseIntegration.host" : "$host",
+        "xlReleaseIntegration.username" : "$username",
+        "xlReleaseIntegration.password" : "$password"
+    ])
 }
