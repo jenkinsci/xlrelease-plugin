@@ -33,6 +33,8 @@ import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 public class Release {
     private String id;
     private String title;
+    private String status;
+
     private Map<String, String> variableValues;
 
     public Release() {
@@ -68,6 +70,14 @@ public class Release {
         this.variableValues = variableValues;
     }
 
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(final String status) {
+        this.status = status;
+    }
+
     public String getInternalId() {
         return (id != null) ? id.replace("Applications/", "") : null;
     }
@@ -77,6 +87,7 @@ public class Release {
         return "Release{" +
                 "id='" + id + '\'' +
                 ", title='" + title + '\'' +
+                ", status='" + status + '\'' +
                 '}';
     }
 

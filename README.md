@@ -26,7 +26,3 @@ Debugging is configured with GRADLE_OPTIONS env variable.
 Running integration testing can be done using
     
     gradle test
-
-This uses the `mvn test` because of the following issues with the gradle jpi plugin
-https://issues.jenkins-ci.org/browse/JENKINS-17129
-https://issues.jenkins-ci.org/browse/JENKINS-19942
