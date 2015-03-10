@@ -99,8 +99,8 @@ public class XLReleaseNotifierFormITest {
         HtmlForm xlrForm = jenkins.createWebClient().getPage(project, "configure").getFormByName("config");
         HtmlSelect templateSelect = xlrForm.getSelectByName("_.template");
 
-        assertThat(templateSelect.getSelectedOptions().get(0).asText(), equalTo(TEMPLATE_NAME));
         assertThat(templateSelect.getOptionSize(), greaterThan(1));
+        assertThat(templateSelect.getSelectedOptions().get(0).asText(), equalTo(TEMPLATE_NAME));
         assertThat(xlrForm.getInputByName("_.version").asText(), equalTo(RELEASE_TITLE));
         assertThat(xlrForm.getSelectByName("_.propertyName").getSelectedOptions().get(0).asText(), equalTo(USER_VARIABLE));
     }
