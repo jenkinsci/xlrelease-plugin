@@ -27,6 +27,7 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
+import hudson.PluginWrapper;
 import jenkins.model.Jenkins;
 
 public class PluginFirstClassloaderInvocationHandler implements InvocationHandler {
@@ -48,9 +49,12 @@ public class PluginFirstClassloaderInvocationHandler implements InvocationHandle
         final Thread currentThread = Thread.currentThread();
         final ClassLoader origClassLoader = currentThread.getContextClassLoader();
         try {
-            final ClassLoader pluginClassLoader = Jenkins.getInstance().getPluginManager().getPlugin("xlrelease-plugin").classLoader;
-            currentThread.setContextClassLoader(pluginClassLoader);
-            return doInvoke(proxy, method, args);
+            PluginWrapper plugin = Jenkins.getInstance().getPluginManager().getPlugin("xlrelease-plugin");
+            if (plugin != null) {
+                final ClassLoader pluginClassLoader = plugin.classLoader;
+                currentThread.setContextClassLoader(pluginClassLoader);
+            }
+            return doInvoke(method, args);
         } catch (InvocationTargetException e) {
             throw e.getCause();
         } finally {
@@ -58,7 +62,7 @@ public class PluginFirstClassloaderInvocationHandler implements InvocationHandle
         }
     }
 
-    protected Object doInvoke(Object proxy, Method method, Object[] args) throws Throwable {
+    protected Object doInvoke(Method method, Object[] args) throws Throwable {
         return method.invoke(target, args);
     }
 }
