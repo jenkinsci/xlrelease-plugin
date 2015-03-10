@@ -29,7 +29,6 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
 import com.xebialabs.xlrelease.ci.util.ListBoxModels;
-import com.xebialabs.xlrelease.ci.util.TemplateVariable;
 
 import hudson.Extension;
 import hudson.RelativePath;
