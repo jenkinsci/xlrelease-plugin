@@ -26,6 +26,8 @@ package com.xebialabs.xlrelease.ci;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.ws.rs.core.MediaType;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -33,6 +35,12 @@ import org.jvnet.hudson.test.recipes.LocalData;
 import org.kohsuke.stapler.StaplerRequest;
 import com.gargoylesoftware.htmlunit.html.HtmlForm;
 import com.gargoylesoftware.htmlunit.html.HtmlSelect;
+import com.sun.jersey.api.client.*;
+import com.sun.jersey.api.client.config.ClientConfig;
+import com.sun.jersey.api.client.config.DefaultClientConfig;
+import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
+
+import com.xebialabs.xlrelease.ci.util.Release;
 
 import hudson.model.Descriptor;
 import hudson.model.FreeStyleBuild;
@@ -45,6 +53,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
@@ -61,8 +70,23 @@ public class XLReleaseNotifierFormITest {
     private static final String ENV_XLR_USERNAME = "xlReleaseIntegration.username";
     private static final String ENV_XLR_PASSWORD = "xlReleaseIntegration.password";
 
+    private static final String DEFAULT_HOST = "http://localhost:5516";
+    private static final String DEFAULT_USERNAME = "admin";
+    private static final String DEFAULT_PASSWORD = "admin";
+
+    private static String host;
+    private static String username;
+    private static String password;
+
     @Rule
     public JenkinsRule jenkins = new JenkinsRule();
+
+    @Before
+    public void before() {
+        host = System.getProperty(ENV_XLR_HOST) != null ? System.getProperty(ENV_XLR_HOST) : DEFAULT_HOST;
+        username = System.getProperty(ENV_XLR_USERNAME) != null ? System.getProperty(ENV_XLR_USERNAME) : DEFAULT_USERNAME;
+        password = System.getProperty(ENV_XLR_PASSWORD) != null ? System.getProperty(ENV_XLR_PASSWORD) : DEFAULT_PASSWORD;
+    }
 
     @Test
     @LocalData
@@ -93,29 +117,46 @@ public class XLReleaseNotifierFormITest {
         String releaseId = findReleaseId(freeStyleBuild.getLog(20));
         assertThat(releaseId, notNullValue());
 
+        waitForReleaseStarted(releaseId);
+    }
+
+    private void waitForReleaseStarted(final String releaseId) throws InterruptedException {
+        ClientConfig config = new DefaultClientConfig();
+        Client client = Client.create(config);
+        client.addFilter(new HTTPBasicAuthFilter(username, password));
+        WebResource service = client.resource(host);
+
+        GenericType<Release> genericType = new GenericType<Release>() {};
+
+        int maxNumberOfRetry = 30;
+        while (maxNumberOfRetry-- > 0) {
+            try {
+                Release release = service.path("api").path("v1").path("releases").path(releaseId).accept(MediaType.APPLICATION_JSON).get(genericType);
+                if ("IN_PROGRESS".equals(release.getStatus())) {
+                    return;
+                }
+            } catch (UniformInterfaceException exception) {
+                if (exception.getResponse().getStatus() != 404) {
+                    throw exception;
+                }
+            }
+            Thread.sleep(1000);
+        }
+
+        fail("Release " + releaseId + " was not started within 30 seconds");
     }
 
     private String findReleaseId(List<String> log) {
         for (String line : log) {
             Matcher matcher = Pattern.compile(".*(Release\\d+).*").matcher(line);
             if (matcher.matches()) {
-                return matcher.group(1);
+                return "Applications/" + matcher.group(1);
             }
         }
         return null;
     }
 
     private XLReleaseNotifier reconfigureWithEnvSettings(XLReleaseNotifier xlReleaseNotifier) throws Descriptor.FormException {
-
-        final String host = System.getProperty(ENV_XLR_HOST);
-        if (host == null) {
-            // no custom server configured
-            return xlReleaseNotifier;
-        }
-        final String username = System.getProperty(ENV_XLR_USERNAME);
-        final String password = System.getProperty(ENV_XLR_PASSWORD);
-
-
         StaplerRequest request = mock(StaplerRequest.class);
         when(request.bindJSONToList(eq(Credential.class), anyObject())).thenReturn(newArrayList(
                 new Credential(ADMIN_CREDENTIAL, username, Secret.fromString(password), null)));
