@@ -61,13 +61,13 @@ buildscript {
 
     }
     dependencies {
-        classpath 'org.jenkins-ci.tools:gradle-jpi-plugin:0.4.0'
+        classpath 'org.jenkins-ci.tools:gradle-jpi-plugin:0.10.0'
     }
 }
 
 
 jenkinsPlugin {
-    coreVersion = '1.509.4' // we need to support LTS versions
+    coreVersion = '1.596.1' // we need to support LTS versions
     displayName = "XebiaLabs XL Release Plugin"
     url = 'https://wiki.jenkins-ci.org/display/JENKINS/XL+Release+Plugin'
     gitHubUrl = 'https://github.com/jenkinsci/XL+Release-plugin'
@@ -84,12 +84,17 @@ jenkinsPlugin {
 
 configurations {
     compile.transitive = true
-    providedRuntime.exclude group: 'jdom', module: 'jdom' //Engine packager requires JDOM2. Exclude from config so that it is included in the hpi Web-Inf lib.
-    providedRuntime.exclude group: 'de.schlichtherle.truezip', module: 'truezip-path' // needs Java7, borks on Java6 setups
+
     all*.exclude group: 'com.thoughtworks.xstream', module: "xstream"
-    // this artifact lives in a netbeans repository which behaves flakey
+    // this artifact lives in a netbeans repository which behaves flaky
     // it's not used so exclude it.
     testCompile.exclude group: 'org.netbeans.modules', module: "org-netbeans-insane"
+
+    additionalLibs
+}
+
+jpi.doFirst {
+  classpath = classpath + project.configurations.additionalLibs
 }
 
 def truezipVersion = "7.1.4" // this is the latest version not to bork on a Java6 Jenkins master/slave-setup
@@ -105,15 +110,6 @@ configurations.all {
     }
 }
 
-// Replace Gradle test with Maven test
-task mvnTest(type:Exec) {
-  commandLine 'mvn', 'clean', 'test'
-}
-test {
-  actions = []
-}
-test.dependsOn mvnTest
-
 dependencies {
     compile "com.google.guava:guava:13.0"
     compile "com.sun.jersey:jersey-client:1.18"
@@ -127,9 +123,67 @@ dependencies {
     compile 'com.google.code.findbugs:jsr305:2.0.2'
     compile 'findbugs:annotations:1.0.0'
 
+    additionalLibs "com.google.guava:guava:13.0"
+    additionalLibs "findbugs:annotations:1.0.0"
+
     testCompile "junit:junit:4.11"
     testCompile "org.powermock:powermock-module-junit4:1.5.3"
     testCompile "org.powermock:powermock-api-mockito:1.5.3"
     testCompile "org.mockito:mockito-all:1.9.5"
 
+    testCompile "org.jenkins-ci.modules:launchd-slave-installer:1.2@jm"
+    testCompile "org.jenkins-ci.modules:systemd-slave-installer:1.1@jm"
+
+    jenkinsTest 'org.jenkins-ci.main:maven-plugin:1.480@jar'
+}
+configurations {
+    all*.exclude group: 'org.jenkins-ci.modules', module: 'launchd-slave-installer'
+    all*.exclude group: 'org.jenkins-ci.modules', module: 'systemd-slave-installer'
+}
+
+// Integration test configuration which runs using a real XL Release server
+sourceSets {
+    itest {
+        java {
+            compileClasspath += main.output
+            runtimeClasspath += main.output
+        }
+        resources.srcDir file('src/itest/resources')
+    }
+}
+
+configurations {
+    itestCompile.extendsFrom testCompile
+    itestRuntime.extendsFrom testRuntime
+}
+
+// Below dependencies should have been inherited from testRuntime
+dependencies {
+    itestRuntime "org.jenkins-ci.main:maven-plugin:2.7.1@jar"
+    itestRuntime "org.jenkins-ci.plugins:ant@jar"
+    itestRuntime "org.jenkins-ci.plugins:subversion:1.45@jar"
+    itestRuntime "org.jenkins-ci.plugins:mailer@jar"
+    itestRuntime "org.jenkins-ci.plugins:matrix-auth:1@jar"
+    itestRuntime "org.jenkins-ci.plugins:antisamy-markup-formatter:1.0@jar"
+    itestRuntime "org.jenkins-ci.plugins:matrix-project:1.4.1@jar"
+    itestRuntime "org.jenkins-ci.plugins:junit:1.2-be@jar"
+    itestRuntime "org.jenkins-ci.plugins:javadoc@jar"
+    itestRuntime "org.jenkins-ci.plugins:script-security:1.13@jar"
+}
+
+task itest(type: Test) {
+    description = "Run integration tests"
+    testClassesDir = project.sourceSets.itest.output.classesDir
+    classpath = project.sourceSets.itest.runtimeClasspath
+}
+
+if (project.hasProperty('xlReleaseIntegration.host')) {
+    def host = project.property('xlReleaseIntegration.host')
+    def username = project.property('xlReleaseIntegration.username')
+    def password = project.property('xlReleaseIntegration.password')
+    itest.systemProperties([
+        "xlReleaseIntegration.host" : "$host",
+        "xlReleaseIntegration.username" : "$username",
+        "xlReleaseIntegration.password" : "$password"
+    ])
 }

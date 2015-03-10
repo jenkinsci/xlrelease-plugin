@@ -117,16 +117,14 @@ public class XLReleaseNotifier extends Notifier {
     }
 
     private Release createRelease(final String resolvedTemplate, final String resolvedVersion, final List<NameValuePair> resolvedVariables, final JenkinsReleaseListener deploymentListener) {
-        deploymentListener.info(Messages.XLReleaseNotifier_createRelease(resolvedTemplate, resolvedVersion));
-
         // create a new release instance
         Release release = getXLReleaseServer().createRelease(resolvedTemplate, resolvedVersion, resolvedVariables);
+        deploymentListener.info(Messages.XLReleaseNotifier_createRelease(resolvedTemplate, resolvedVersion, release.getId()));
         return release;
-
     }
 
     private void startRelease(final Release release, final String resolvedTemplate, final String resolvedVersion, final JenkinsReleaseListener deploymentListener) {
-        deploymentListener.info(Messages.XLReleaseNotifier_startRelease(resolvedTemplate, resolvedVersion));
+        deploymentListener.info(Messages.XLReleaseNotifier_startRelease(resolvedTemplate, resolvedVersion, release.getId()));
 
         // start the release
         getXLReleaseServer().startRelease(release.getInternalId());
