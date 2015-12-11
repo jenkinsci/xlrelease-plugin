@@ -33,10 +33,7 @@ import org.apache.commons.collections.Predicate;
 import org.codehaus.jackson.jaxrs.JacksonJaxbJsonProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.GenericType;
-import com.sun.jersey.api.client.WebResource;
+import com.sun.jersey.api.client.*;
 import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
@@ -96,9 +93,7 @@ public class XLReleaseServerImpl implements XLReleaseServer {
 
         CollectionUtils.filter(templates, new Predicate() {
             public boolean evaluate(Object o) {
-               if (((Release)o).getTitle().contains(s))
-                   return true;
-               return false;
+                return ((Release) o).getTitle().contains(s);
             }
         });
         LoggerFactory.getLogger(this.getClass()).info(templates + "\n");
@@ -133,7 +128,33 @@ public class XLReleaseServerImpl implements XLReleaseServer {
         LoggerFactory.getLogger(this.getClass()).info("Get variables for " + templateId);
         GenericType<List<TemplateVariable>> genericType =
                 new GenericType<List<TemplateVariable>>() {};
-        return service.path("releases").path(templateId).path("updatable-variables").accept(MediaType.APPLICATION_JSON).get(genericType);
+        try {
+            List<TemplateVariable> variables = service
+                    .path("api/v1/releases/Applications")
+                    .path(templateId)
+                    .path("variables")
+                    .accept(MediaType.APPLICATION_JSON)
+                    .get(genericType);
+            CollectionUtils.filter(variables, new Predicate() {
+                public boolean evaluate(Object o) {
+                    return (o instanceof TemplateVariable) &&
+                            "xlrelease.StringVariable".equals(((TemplateVariable) o).getType());
+                }
+            });
+            return variables;
+        } catch (UniformInterfaceException e) {
+            if (e.getResponse().getStatus() == 404) {
+                // Try the pre-4.8.x internal API
+                return service
+                        .path("releases")
+                        .path(templateId)
+                        .path("updatable-variables")
+                        .accept(MediaType.APPLICATION_JSON)
+                        .get(genericType);
+            } else {
+                throw e;
+            }
+        }
     }
 
     @Override
@@ -176,9 +197,7 @@ public class XLReleaseServerImpl implements XLReleaseServer {
         List<Release> templates = searchTemplates(resolvedTemplate);
         CollectionUtils.filter(templates, new Predicate() {
             public boolean evaluate(Object o) {
-                if (((Release)o).getTitle().equals(resolvedTemplate))
-                    return true;
-                return false;
+                return ((Release) o).getTitle().equals(resolvedTemplate);
             }
         });
 

@@ -71,9 +71,7 @@ public class XLReleaseServerImpl implements XLReleaseServer {
 
         CollectionUtils.filter(templates, new Predicate() {
             public boolean evaluate(Object o) {
-               if (((Release)o).getTitle().contains(s))
-                   return true;
-               return false;
+                return ((Release) o).getTitle().contains(s);
             }
         });
         LoggerFactory.getLogger(this.getClass()).info(templates + "\n");
@@ -104,9 +102,7 @@ public class XLReleaseServerImpl implements XLReleaseServer {
         List<Release> templates = searchTemplates(resolvedTemplate);
         CollectionUtils.filter(templates, new Predicate() {
             public boolean evaluate(Object o) {
-                if (((Release)o).getTitle().equals(resolvedTemplate))
-                    return true;
-                return false;
+                return ((Release) o).getTitle().equals(resolvedTemplate);
             }
         });
 

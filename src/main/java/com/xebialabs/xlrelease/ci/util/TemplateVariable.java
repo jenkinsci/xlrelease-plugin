@@ -35,7 +35,8 @@ import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 public class TemplateVariable {
 
     private String key;
-    private String value;
+    private String type = "xlrelease.StringVariable";
+    private Object value;
 
     public TemplateVariable() {
     }
@@ -53,18 +54,26 @@ public class TemplateVariable {
         this.key = key;
     }
 
-    public String getValue() {
+    public Object getValue() {
         return value;
     }
 
-    public void setValue(final String value) {
+    public void setValue(final Object value) {
         this.value = value;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(final String type) {
+        this.type = type;
     }
 
     public static Map<String, String> toMap(Collection<? extends TemplateVariable> variables) {
         Map<String, String> result = new HashMap<String, String>();
         for (TemplateVariable variable : variables) {
-            result.put(variable.getKey(), variable.getValue());
+            result.put(variable.getKey(), variable.getValue() == null ? null : variable.getValue().toString());
         }
         return result;
     }
