@@ -27,7 +27,7 @@ import java.util.List;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class CreateReleaseView {
+public class CreateReleaseInternalForm {
 
     private List<TemplateVariable> variables;
     private String templateId;
@@ -35,10 +35,10 @@ public class CreateReleaseView {
     private String dueDate;
     private String scheduledStartDate;
 
-    public CreateReleaseView() {
+    public CreateReleaseInternalForm() {
     }
 
-    public CreateReleaseView(final String templateId, final String title, final List<TemplateVariable> variables, final String dueDate, final String scheduledStartDate) {
+    public CreateReleaseInternalForm(final String templateId, final String title, final List<TemplateVariable> variables, final String dueDate, final String scheduledStartDate) {
         this.variables = variables;
         this.templateId = templateId;
         this.title = title;

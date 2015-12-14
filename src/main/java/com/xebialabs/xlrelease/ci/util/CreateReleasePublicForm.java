@@ -23,58 +23,37 @@
 
 package com.xebialabs.xlrelease.ci.util;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-
-import javax.xml.bind.annotation.XmlRootElement;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
-@XmlRootElement
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class TemplateVariable {
+public class CreateReleasePublicForm {
 
-    private String key;
-    private String type;
-    private Object value;
+    private String releaseTitle;
+    private Map<String, String> releaseVariables = new HashMap<String, String>();
 
-    public TemplateVariable() {
+    public CreateReleasePublicForm() {
     }
 
-    public TemplateVariable(final String key, final String value) {
-        this.key = key;
-        this.value = value;
+    public CreateReleasePublicForm(final String releaseTitle, final Map<String, String> releaseVariables) {
+        this.releaseTitle = releaseTitle;
+        this.releaseVariables = releaseVariables;
     }
 
-    public String getKey() {
-        return key;
+    public String getReleaseTitle() {
+        return releaseTitle;
     }
 
-    public void setKey(final String key) {
-        this.key = key;
+    public void setReleaseTitle(final String releaseTitle) {
+        this.releaseTitle = releaseTitle;
     }
 
-    public Object getValue() {
-        return value;
+    public Map<String, String> getReleaseVariables() {
+        return releaseVariables;
     }
 
-    public void setValue(final Object value) {
-        this.value = value;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public void setType(final String type) {
-        this.type = type;
-    }
-
-    public static Map<String, String> toMap(Collection<? extends TemplateVariable> variables) {
-        Map<String, String> result = new HashMap<String, String>();
-        for (TemplateVariable variable : variables) {
-            result.put(variable.getKey(), variable.getValue() == null ? null : variable.getValue().toString());
-        }
-        return result;
+    public void setReleaseVariables(final Map<String, String> releaseVariables) {
+        this.releaseVariables = releaseVariables;
     }
 }
