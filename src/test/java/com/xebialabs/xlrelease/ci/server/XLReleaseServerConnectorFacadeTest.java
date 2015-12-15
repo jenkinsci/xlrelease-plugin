@@ -5,11 +5,11 @@ import org.junit.Test;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
-public class XLReleaseServerImplTest {
+public class XLReleaseServerConnectorFacadeTest {
 
     @Test
     public void should_choose_correct_connector_by_version() {
-        XLReleaseServerImpl server = new XLReleaseServerImpl(null, null, null, null);
+        XLReleaseServerConnectorFacade server = new XLReleaseServerConnectorFacade(null, null, null, null);
         assertThat(server.isVersionPre48("4.7.2"), is(true));
         assertThat(server.isVersionPre48("4.7.3-SNAPSHOT"), is(true));
         assertThat(server.isVersionPre48("0.0.0"), is(true));

@@ -27,14 +27,13 @@ import java.util.ArrayList;
 import java.util.List;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Predicate;
-import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.xebialabs.xlrelease.ci.NameValuePair;
 import com.xebialabs.xlrelease.ci.util.Release;
 import com.xebialabs.xlrelease.ci.util.TemplateVariable;
 
-public class XLReleaseServerImplMock implements XLReleaseServer {
+public class XLReleaseServerImplMock implements XLReleaseServerConnector {
 
     @Override
     public void testConnection() {

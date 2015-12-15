@@ -29,7 +29,7 @@ import com.xebialabs.xlrelease.ci.NameValuePair;
 import com.xebialabs.xlrelease.ci.util.Release;
 import com.xebialabs.xlrelease.ci.util.TemplateVariable;
 
-public interface XLReleaseServer {
+public interface XLReleaseServerConnector {
 
     void testConnection();
 

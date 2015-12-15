@@ -27,7 +27,7 @@ import com.xebialabs.xlrelease.ci.util.TemplateVariable;
 
 import static javax.ws.rs.core.Response.Status.Family.SUCCESSFUL;
 
-public abstract class AbstractXLReleaseConnector implements XLReleaseServer, XLReleaseConnector {
+public abstract class AbstractXLReleaseConnector implements XLReleaseServerConnector {
 
     protected static final Logger logger = LoggerFactory.getLogger(AbstractXLReleaseConnector.class);
 
@@ -131,7 +131,6 @@ public abstract class AbstractXLReleaseConnector implements XLReleaseServer, XLR
         }
     }
 
-
     protected WebResource buildWebResource() {
         ClientConfig config = new DefaultClientConfig();
         config.getFeatures().put(JSONConfiguration.FEATURE_POJO_MAPPING, Boolean.TRUE);
@@ -171,4 +170,11 @@ public abstract class AbstractXLReleaseConnector implements XLReleaseServer, XLR
         return variablesMap;
     }
 
+    protected abstract ClientResponse getVariablesResponse(String templateId);
+
+    protected abstract ClientResponse createReleaseResponse(String templateTitle, String releaseTitle, List<NameValuePair> variables);
+
+    protected abstract ClientResponse startReleaseResponse(String releaseId);
+
+    protected abstract List<TemplateVariable> filterVariables(List<TemplateVariable> variables);
 }

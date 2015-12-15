@@ -31,7 +31,7 @@ import org.kohsuke.stapler.QueryParameter;
 import com.google.common.base.Function;
 import com.google.common.base.Strings;
 
-import com.xebialabs.xlrelease.ci.server.XLReleaseServer;
+import com.xebialabs.xlrelease.ci.server.XLReleaseServerConnector;
 import com.xebialabs.xlrelease.ci.server.XLReleaseServerFactory;
 
 import hudson.Extension;
@@ -163,9 +163,9 @@ public class Credential extends AbstractDescribableImpl<Credential> {
                 String proxyUrl = Strings.isNullOrEmpty(secondaryProxyUrl) ? xlReleaseClientProxyUrl : secondaryProxyUrl;
 
                 XLReleaseServerFactory factory = new XLReleaseServerFactory();
-                XLReleaseServer xlReleaseServer = factory.newInstance(serverUrl, proxyUrl, username, password.getPlainText());
-                xlReleaseServer.testConnection(); // throws IllegalStateException if creds invalid
-                return FormValidation.ok("Your XL Release instance [%s] version %s is alive, and your credentials are valid!", serverUrl, xlReleaseServer.getVersion());
+                XLReleaseServerConnector xlReleaseServerConnector = factory.newInstance(serverUrl, proxyUrl, username, password.getPlainText());
+                xlReleaseServerConnector.testConnection(); // throws IllegalStateException if creds invalid
+                return FormValidation.ok("Your XL Release instance [%s] version %s is alive, and your credentials are valid!", serverUrl, xlReleaseServerConnector.getVersion());
             } catch(IllegalStateException e) {
                 return FormValidation.error(e.getMessage());
             } catch (Exception e) {

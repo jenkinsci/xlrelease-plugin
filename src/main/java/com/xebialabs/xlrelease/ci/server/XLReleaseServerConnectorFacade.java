@@ -26,24 +26,23 @@ package com.xebialabs.xlrelease.ci.server;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import com.google.common.annotations.VisibleForTesting;
 
 import com.xebialabs.xlrelease.ci.NameValuePair;
 import com.xebialabs.xlrelease.ci.util.Release;
 import com.xebialabs.xlrelease.ci.util.TemplateVariable;
 
-public class XLReleaseServerImpl implements XLReleaseServer {
+public class XLReleaseServerConnectorFacade implements XLReleaseServerConnector {
 
-    private XLReleaseServer connectorPre48;
-    private XLReleaseServer defaultConnector;
+    private XLReleaseServerConnector connectorPre48;
+    private XLReleaseServerConnector defaultConnector;
 
-    XLReleaseServerImpl(String serverUrl, String proxyUrl, String username, String password) {
+    XLReleaseServerConnectorFacade(String serverUrl, String proxyUrl, String username, String password) {
         this.connectorPre48 = new XLReleaseConnectorImplPre48(serverUrl, proxyUrl, username, password);
         this.defaultConnector = new XLReleaseConnectorImpl(serverUrl, proxyUrl, username, password);
     }
 
-    private XLReleaseServer getCurrentVersion() {
+    private XLReleaseServerConnector getCurrentVersion() {
         String versionString = getVersion();
         return isVersionPre48(versionString) ? connectorPre48 : defaultConnector;
     }

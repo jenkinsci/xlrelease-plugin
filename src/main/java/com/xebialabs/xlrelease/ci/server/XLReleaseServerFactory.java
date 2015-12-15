@@ -37,9 +37,9 @@ public class XLReleaseServerFactory {
         return true;
     }
 
-    public XLReleaseServer newInstance(String serverUrl, String proxyUrl, String username, String password) {
-        XLReleaseServerImpl server = new XLReleaseServerImpl(serverUrl, proxyUrl, username, password);
-        return Reflection.newProxy(XLReleaseServer.class, new PluginFirstClassloaderInvocationHandler(server));
+    public XLReleaseServerConnector newInstance(String serverUrl, String proxyUrl, String username, String password) {
+        XLReleaseServerConnectorFacade server = new XLReleaseServerConnectorFacade(serverUrl, proxyUrl, username, password);
+        return Reflection.newProxy(XLReleaseServerConnector.class, new PluginFirstClassloaderInvocationHandler(server));
     }
 
 

@@ -23,14 +23,13 @@
 
 package com.xebialabs.xlrelease.ci;
 
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.recipes.LocalData;
 
-import com.xebialabs.xlrelease.ci.server.XLReleaseServer;
+import com.xebialabs.xlrelease.ci.server.XLReleaseServerConnector;
 import com.xebialabs.xlrelease.ci.server.XLReleaseServerFactory;
 import com.xebialabs.xlrelease.ci.server.XLReleaseServerImplMock;
 
@@ -45,7 +44,7 @@ public class XLReleaseNotifierFormTest {
     public static void setUp() {
         XLReleaseNotifier.XLReleaseDescriptor.setXlReleaseServerFactory(new XLReleaseServerFactory() {
             @Override
-            public XLReleaseServer newInstance(final String serverUrl, final String proxyUrl, final String username, final String password) {
+            public XLReleaseServerConnector newInstance(final String serverUrl, final String proxyUrl, final String username, final String password) {
                 return new XLReleaseServerImplMock();
             }
         });

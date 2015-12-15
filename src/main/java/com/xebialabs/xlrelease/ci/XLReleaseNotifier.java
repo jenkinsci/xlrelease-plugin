@@ -27,7 +27,6 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
-
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Transformer;
 import org.kohsuke.stapler.AncestorInPath;
@@ -37,7 +36,7 @@ import org.kohsuke.stapler.StaplerRequest;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 
-import com.xebialabs.xlrelease.ci.server.XLReleaseServer;
+import com.xebialabs.xlrelease.ci.server.XLReleaseServerConnector;
 import com.xebialabs.xlrelease.ci.server.XLReleaseServerFactory;
 import com.xebialabs.xlrelease.ci.util.JenkinsReleaseListener;
 import com.xebialabs.xlrelease.ci.util.Release;
@@ -105,8 +104,7 @@ public class XLReleaseNotifier extends Notifier {
         }
 
         // createRelease
-        Release release = null;
-        release = createRelease(template, resolvedVersion, resolvedVariables, deploymentListener);
+        Release release = createRelease(template, resolvedVersion, resolvedVariables, deploymentListener);
 
         // startRelease
         if (startRelease) {
@@ -131,7 +129,7 @@ public class XLReleaseNotifier extends Notifier {
     }
 
 
-    private XLReleaseServer getXLReleaseServer() {
+    private XLReleaseServerConnector getXLReleaseServer() {
         return getDescriptor().getXLReleaseServer(credential);
     }
 
@@ -153,7 +151,7 @@ public class XLReleaseNotifier extends Notifier {
 
         // ************ OTHER NON-SERIALIZABLE PROPERTIES *********** //
 
-        private final transient Map<String,XLReleaseServer> credentialServerMap = newHashMap();
+        private final transient Map<String,XLReleaseServerConnector> credentialServerMap = newHashMap();
         private transient static XLReleaseServerFactory xlReleaseServerFactory = new XLReleaseServerFactory();
 
         private Release release;
@@ -250,6 +248,7 @@ public class XLReleaseNotifier extends Notifier {
             try {
                 List<Release> templates = getXLReleaseServer(credential).getAllTemplates();
 
+                @SuppressWarnings("unchecked")
                 Collection<String> titles = CollectionUtils.collect(templates, new Transformer() {
                     public Object transform(Object o) {
                         return ((Release) o).getTitle();
@@ -293,7 +292,7 @@ public class XLReleaseNotifier extends Notifier {
         }
 
 
-        private XLReleaseServer getXLReleaseServer(String credential) {
+        private XLReleaseServerConnector getXLReleaseServer(String credential) {
             checkNotNull(credential);
             return credentialServerMap.get(credential);
         }
