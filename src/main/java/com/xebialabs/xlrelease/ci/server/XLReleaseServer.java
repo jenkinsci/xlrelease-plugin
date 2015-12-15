@@ -30,11 +30,13 @@ import com.xebialabs.xlrelease.ci.util.Release;
 import com.xebialabs.xlrelease.ci.util.TemplateVariable;
 
 public interface XLReleaseServer {
-    void newCommunicator();
 
-    Object getVersion();
+    void testConnection();
 
-    List<Release> searchTemplates(String s);
+    String getVersion();
+
+    List<Release> searchTemplates(String filter);
+
     List<Release> getAllTemplates();
 
     List<TemplateVariable> getVariables(String templateId);

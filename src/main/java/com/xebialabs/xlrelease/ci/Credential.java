@@ -26,7 +26,6 @@ package com.xebialabs.xlrelease.ci;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import com.google.common.base.Function;
@@ -163,9 +162,10 @@ public class Credential extends AbstractDescribableImpl<Credential> {
                 String serverUrl = Strings.isNullOrEmpty(secondaryServerUrl) ? xlReleaseServerUrl : secondaryServerUrl;
                 String proxyUrl = Strings.isNullOrEmpty(secondaryProxyUrl) ? xlReleaseClientProxyUrl : secondaryProxyUrl;
 
-                XLReleaseServer xlReleaseServer = XLReleaseServerFactory.newInstance(serverUrl, proxyUrl, username, password.getPlainText());
-                xlReleaseServer.newCommunicator(); // throws IllegalStateException if creds invalid
-                return FormValidation.ok("Your XL Release instance [%s] is alive, and your credentials are valid!", xlReleaseServer.getVersion());
+                XLReleaseServerFactory factory = new XLReleaseServerFactory();
+                XLReleaseServer xlReleaseServer = factory.newInstance(serverUrl, proxyUrl, username, password.getPlainText());
+                xlReleaseServer.testConnection(); // throws IllegalStateException if creds invalid
+                return FormValidation.ok("Your XL Release instance [%s] version %s is alive, and your credentials are valid!", serverUrl, xlReleaseServer.getVersion());
             } catch(IllegalStateException e) {
                 return FormValidation.error(e.getMessage());
             } catch (Exception e) {
