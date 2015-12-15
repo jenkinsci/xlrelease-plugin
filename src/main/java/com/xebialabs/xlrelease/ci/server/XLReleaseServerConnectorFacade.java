@@ -42,14 +42,14 @@ public class XLReleaseServerConnectorFacade implements XLReleaseServerConnector 
         this.defaultConnector = new XLReleaseConnectorImpl(serverUrl, proxyUrl, username, password);
     }
 
-    private XLReleaseServerConnector getCurrentVersion() {
+    private XLReleaseServerConnector getConnectorForXlrVersion() {
         String versionString = getVersion();
         return isVersionPre48(versionString) ? connectorPre48 : defaultConnector;
     }
 
     @Override
     public void testConnection() {
-        getCurrentVersion().testConnection();
+        getConnectorForXlrVersion().testConnection();
     }
 
     @Override
@@ -59,27 +59,27 @@ public class XLReleaseServerConnectorFacade implements XLReleaseServerConnector 
 
     @Override
     public List<Release> searchTemplates(final String filter) {
-        return getCurrentVersion().searchTemplates(filter);
+        return getConnectorForXlrVersion().searchTemplates(filter);
     }
 
     @Override
     public List<Release> getAllTemplates() {
-        return getCurrentVersion().getAllTemplates();
+        return getConnectorForXlrVersion().getAllTemplates();
     }
 
     @Override
     public List<TemplateVariable> getVariables(String templateId) {
-        return getCurrentVersion().getVariables(templateId);
+        return getConnectorForXlrVersion().getVariables(templateId);
     }
 
     @Override
     public Release createRelease(final String resolvedTemplate, final String resolvedVersion, final List<NameValuePair> variables) {
-        return getCurrentVersion().createRelease(resolvedTemplate, resolvedVersion, variables);
+        return getConnectorForXlrVersion().createRelease(resolvedTemplate, resolvedVersion, variables);
     }
 
     @Override
     public void startRelease(final String releaseId) {
-        getCurrentVersion().startRelease(releaseId);
+        getConnectorForXlrVersion().startRelease(releaseId);
     }
 
     @VisibleForTesting
