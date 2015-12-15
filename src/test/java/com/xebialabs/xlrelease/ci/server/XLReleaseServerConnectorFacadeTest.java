@@ -12,8 +12,10 @@ public class XLReleaseServerConnectorFacadeTest {
         XLReleaseServerConnectorFacade server = new XLReleaseServerConnectorFacade(null, null, null, null);
         assertThat(server.isVersionPre48("4.7.2"), is(true));
         assertThat(server.isVersionPre48("4.7.3-SNAPSHOT"), is(true));
-        assertThat(server.isVersionPre48("0.0.0"), is(true));
+        assertThat(server.isVersionPre48("4.6.0"), is(true));
+        assertThat(server.isVersionPre48("3.0.0"), is(true));
 
+        assertThat(server.isVersionPre48("0.0.0"), is(false));
         assertThat(server.isVersionPre48("4.8.0"), is(false));
         assertThat(server.isVersionPre48("4.8.1"), is(false));
         assertThat(server.isVersionPre48("4.9.2"), is(false));

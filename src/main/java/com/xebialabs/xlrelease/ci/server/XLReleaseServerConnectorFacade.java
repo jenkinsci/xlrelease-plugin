@@ -87,6 +87,9 @@ public class XLReleaseServerConnectorFacade implements XLReleaseServerConnector 
         if (versionString == null) {
             return false;
         }
+        if (versionString.startsWith("0.0.")) {
+            return false;
+        }
         Matcher matcher = Pattern.compile("^(\\d+)\\.(\\d+)\\..*").matcher(versionString);
         if (!matcher.matches()) {
             return false;
