@@ -2,10 +2,10 @@ package com.xebialabs.xlrelease.ci.server;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import javax.ws.rs.core.MediaType;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Predicate;
+import org.apache.commons.collections.Transformer;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 
@@ -68,6 +68,18 @@ public class XLReleaseConnectorImpl extends AbstractXLReleaseConnector {
                     return acceptedTypes.contains(((TemplateVariable) o).getType());
                 }
                 return false;
+            }
+        });
+        CollectionUtils.transform(variables, new Transformer() {
+            @Override
+            public Object transform(final Object o) {
+                if (o instanceof TemplateVariable) {
+                    String key = ((TemplateVariable) o).getKey();
+                    if (key != null) {
+                        ((TemplateVariable) o).setKey(String.format("${%s}", key));
+                    }
+                }
+                return o;
             }
         });
         return variables;
