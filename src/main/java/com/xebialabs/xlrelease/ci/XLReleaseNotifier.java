@@ -27,16 +27,16 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
-
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Transformer;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 
-import com.xebialabs.xlrelease.ci.server.XLReleaseServer;
+import com.xebialabs.xlrelease.ci.server.XLReleaseServerConnector;
 import com.xebialabs.xlrelease.ci.server.XLReleaseServerFactory;
 import com.xebialabs.xlrelease.ci.util.JenkinsReleaseListener;
 import com.xebialabs.xlrelease.ci.util.Release;
@@ -75,7 +75,6 @@ public class XLReleaseNotifier extends Notifier {
     public List<NameValuePair> variables;
     public final boolean startRelease;
 
-
     @DataBoundConstructor
     public XLReleaseNotifier(String credential, String template, String version,  List<NameValuePair> variables, boolean startRelease) {
         this.credential = credential;
@@ -105,8 +104,7 @@ public class XLReleaseNotifier extends Notifier {
         }
 
         // createRelease
-        Release release = null;
-        release = createRelease(template, resolvedVersion, resolvedVariables, deploymentListener);
+        Release release = createRelease(template, resolvedVersion, resolvedVariables, deploymentListener);
 
         // startRelease
         if (startRelease) {
@@ -131,7 +129,7 @@ public class XLReleaseNotifier extends Notifier {
     }
 
 
-    private XLReleaseServer getXLReleaseServer() {
+    private XLReleaseServerConnector getXLReleaseServer() {
         return getDescriptor().getXLReleaseServer(credential);
     }
 
@@ -153,7 +151,8 @@ public class XLReleaseNotifier extends Notifier {
 
         // ************ OTHER NON-SERIALIZABLE PROPERTIES *********** //
 
-        private final transient Map<String,XLReleaseServer> credentialServerMap = newHashMap();
+        private final transient Map<String,XLReleaseServerConnector> credentialServerMap = newHashMap();
+        private transient static XLReleaseServerFactory xlReleaseServerFactory = new XLReleaseServerFactory();
 
         private Release release;
 
@@ -167,8 +166,8 @@ public class XLReleaseNotifier extends Notifier {
                 String serverUrl = credential.resolveServerUrl(xlReleaseServerUrl);
                 String proxyUrl = credential.resolveProxyUrl(xlReleaseClientProxyUrl);
 
-                credentialServerMap.put(credential.name,
-                        XLReleaseServerFactory.newInstance(serverUrl, proxyUrl, credential.username, credential.password != null ? credential.password.getPlainText() : ""));
+                credentialServerMap.put(credential.name, xlReleaseServerFactory.newInstance(serverUrl, proxyUrl,
+                        credential.username, credential.password != null ? credential.password.getPlainText() : ""));
             }
         }
 
@@ -249,6 +248,7 @@ public class XLReleaseNotifier extends Notifier {
             try {
                 List<Release> templates = getXLReleaseServer(credential).getAllTemplates();
 
+                @SuppressWarnings("unchecked")
                 Collection<String> titles = CollectionUtils.collect(templates, new Transformer() {
                     public Object transform(Object o) {
                         return ((Release) o).getTitle();
@@ -292,7 +292,7 @@ public class XLReleaseNotifier extends Notifier {
         }
 
 
-        private XLReleaseServer getXLReleaseServer(String credential) {
+        private XLReleaseServerConnector getXLReleaseServer(String credential) {
             checkNotNull(credential);
             return credentialServerMap.get(credential);
         }
@@ -316,6 +316,9 @@ public class XLReleaseNotifier extends Notifier {
             return 0;
         }
 
-
+        @VisibleForTesting
+        public static void setXlReleaseServerFactory(final XLReleaseServerFactory xlReleaseServerFactory) {
+            XLReleaseDescriptor.xlReleaseServerFactory = xlReleaseServerFactory;
+        }
     }
 }
