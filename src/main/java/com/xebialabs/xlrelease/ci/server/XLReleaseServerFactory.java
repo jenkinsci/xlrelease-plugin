@@ -31,15 +31,15 @@ import com.google.common.reflect.Reflection;
 
 
 public class XLReleaseServerFactory {
+
     public boolean validConnection(String serverUrl, String proxyUrl, String username, String password) throws IllegalStateException {
-        newInstance(serverUrl, proxyUrl, username, password).newCommunicator();  //throws IllegalStateException on failure.
+        newInstance(serverUrl, proxyUrl, username, password).testConnection();  //throws IllegalStateException on failure.
         return true;
     }
 
-
-    public static XLReleaseServer newInstance(String serverUrl, String proxyUrl, String username, String password) {
-        XLReleaseServerImpl server = new XLReleaseServerImpl(serverUrl, proxyUrl, username, password);
-        return Reflection.newProxy(XLReleaseServer.class, new PluginFirstClassloaderInvocationHandler(server));
+    public XLReleaseServerConnector newInstance(String serverUrl, String proxyUrl, String username, String password) {
+        XLReleaseServerConnectorFacade server = new XLReleaseServerConnectorFacade(serverUrl, proxyUrl, username, password);
+        return Reflection.newProxy(XLReleaseServerConnector.class, new PluginFirstClassloaderInvocationHandler(server));
     }
 
 

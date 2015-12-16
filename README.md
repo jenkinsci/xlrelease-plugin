@@ -1,8 +1,8 @@
-#Requirements#
+# Requirements #
 
-This plugin requires XL Release version 4.5.0. For older versions of XL Release please use version [4.0.11](http://updates.jenkins-ci.org/download/plugins/xlrelease-plugin/4.0.11/xlrelease-plugin.hpi) of this plugin.
+This plugin requires XL Release version 4.5+. For older versions of XL Release please use version [4.0.11](http://updates.jenkins-ci.org/download/plugins/xlrelease-plugin/4.0.11/xlrelease-plugin.hpi) of this plugin.
 
-#Build#
+# Build #
 The Jenkins plugin build is powered by the <a href="https://github.com/jenkinsci/gradle-jpi-plugin">gradle-jpi-plugin</a> (see its <a href="https://wiki.jenkins-ci.org/display/JENKINS/Gradle+JPI+Plugin">documentation</a>).
 
 There are following targets defined:
@@ -15,13 +15,13 @@ Run development server:
 
     ./gradlew server
 
-###Debugging###
+### Debugging ###
 
 Debugging is configured with GRADLE_OPTIONS env variable.
 
     GRADLE_OPTS="${GRADLE_OPTS} -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5006" ./gradlew clean server
 
-###Testing###
+### Testing ###
 
 Additionally to unit tests there are integration tests which you can run by following command:
     
@@ -75,3 +75,7 @@ Then add them to dependencies:
         itestCompile "org.jenkins-ci.plugins:ant:1.1@jar"
         ...
     }
+
+### Releasing ###
+
+See the [article on XebiaLabs wiki](https://xebialabs.atlassian.net/wiki/display/Labs/Developing+and+releasing+the+Jenkins+plugin).

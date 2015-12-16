@@ -135,6 +135,7 @@ dependencies {
     testCompile "org.jenkins-ci.modules:windows-slave-installer:1.2@jm"
     testCompile "org.jenkins-ci.modules:launchd-slave-installer:1.2@jm"
     testCompile "org.jenkins-ci.modules:systemd-slave-installer:1.1@jm"
+    testCompile "org.jenkins-ci.modules:upstart-slave-installer:1.1@jm"
 
     jenkinsTest 'org.jenkins-ci.main:maven-plugin:1.480@jar'
 }
@@ -145,6 +146,7 @@ configurations {
     all*.exclude group: 'org.jenkins-ci.modules', module: 'windows-slave-installer'
     all*.exclude group: 'org.jenkins-ci.modules', module: 'launchd-slave-installer'
     all*.exclude group: 'org.jenkins-ci.modules', module: 'systemd-slave-installer'
+    all*.exclude group: 'org.jenkins-ci.modules', module: 'upstart-slave-installer'
 }
 
 // Integration test configuration which runs using a real XL Release server

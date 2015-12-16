@@ -21,25 +21,39 @@
  * Floor, Boston, MA 02110-1301  USA
  */
 
-package com.xebialabs.xlrelease.ci.server;
+package com.xebialabs.xlrelease.ci.util;
 
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
-import com.xebialabs.xlrelease.ci.NameValuePair;
-import com.xebialabs.xlrelease.ci.util.Release;
-import com.xebialabs.xlrelease.ci.util.TemplateVariable;
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class CreateReleasePublicForm {
 
-public interface XLReleaseServer {
-    void newCommunicator();
+    private String releaseTitle;
+    private Map<String, String> releaseVariables = new HashMap<String, String>();
 
-    Object getVersion();
+    public CreateReleasePublicForm() {
+    }
 
-    List<Release> searchTemplates(String s);
-    List<Release> getAllTemplates();
+    public CreateReleasePublicForm(final String releaseTitle, final Map<String, String> releaseVariables) {
+        this.releaseTitle = releaseTitle;
+        this.releaseVariables = releaseVariables;
+    }
 
-    List<TemplateVariable> getVariables(String templateId);
+    public String getReleaseTitle() {
+        return releaseTitle;
+    }
 
-    Release createRelease(String resolvedTemplate, String resolvedVersion, List<NameValuePair> variables);
+    public void setReleaseTitle(final String releaseTitle) {
+        this.releaseTitle = releaseTitle;
+    }
 
-    void startRelease(String releaseId);
+    public Map<String, String> getReleaseVariables() {
+        return releaseVariables;
+    }
+
+    public void setReleaseVariables(final Map<String, String> releaseVariables) {
+        this.releaseVariables = releaseVariables;
+    }
 }
