@@ -26,6 +26,17 @@ package com.xebialabs.xlrelease.ci;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.List;
+
+import com.cloudbees.plugins.credentials.CredentialsMatchers;
+import com.cloudbees.plugins.credentials.common.StandardUsernameListBoxModel;
+import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
+import com.cloudbees.plugins.credentials.domains.SchemeRequirement;
+import hudson.model.Project;
+import hudson.security.ACL;
+import hudson.util.ListBoxModel;
+import jenkins.model.Jenkins;
+import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import com.google.common.base.Function;
@@ -40,10 +51,14 @@ import hudson.model.Descriptor;
 import hudson.util.FormValidation;
 import hudson.util.Secret;
 
+import static com.cloudbees.plugins.credentials.CredentialsProvider.lookupCredentials;
 import static hudson.util.FormValidation.error;
 import static hudson.util.FormValidation.ok;
 
 public class Credential extends AbstractDescribableImpl<Credential> {
+
+    public static final SchemeRequirement HTTP_SCHEME = new SchemeRequirement("http");
+    public static final SchemeRequirement HTTPS_SCHEME = new SchemeRequirement("https");
 
     public static final Function<Credential, String> CREDENTIAL_INDEX = new Function<Credential, String>() {
         public String apply(Credential input) {
@@ -53,14 +68,18 @@ public class Credential extends AbstractDescribableImpl<Credential> {
     public final String name;
     public final String username;
     public final Secret password;
+    public final String credentialsId;
     private final SecondaryServerInfo secondaryServerInfo;
+    public final boolean useGlobalCredential;
 
     @DataBoundConstructor
-    public Credential(String name, String username, Secret password, SecondaryServerInfo secondaryServerInfo) {
+    public Credential(String name, String username, Secret password, String credentialsId,boolean useGlobalCredential ,SecondaryServerInfo secondaryServerInfo) {
         this.name = name;
         this.username = username;
         this.password = password;
         this.secondaryServerInfo = secondaryServerInfo;
+        this.credentialsId = credentialsId;
+        this.useGlobalCredential = useGlobalCredential;
     }
 
     public String getName() {
@@ -99,6 +118,10 @@ public class Credential extends AbstractDescribableImpl<Credential> {
         return secondaryServerInfo!= null && secondaryServerInfo.showSecondaryServerSettings();
     }
 
+    public boolean showGolbalCredentials() {
+        return credentialsId != null;
+    }
+
     @Override
     public String toString() {
         return name;
@@ -115,21 +138,32 @@ public class Credential extends AbstractDescribableImpl<Credential> {
         if (!password.equals(that.password)) return false;
         if (secondaryServerInfo == null && that.secondaryServerInfo != null) return false;
         if (secondaryServerInfo != null && !secondaryServerInfo.equals(that.secondaryServerInfo)) return false;
-
+        if (useGlobalCredential && that.useGlobalCredential && !credentialsId.equals(that.credentialsId)) return false;
         return username.equals(that.username);
     }
 
     @Override
     public int hashCode() {
         int result = name.hashCode();
-        result = 31 * result + username.hashCode();
-        result = 31 * result + password.hashCode();
+        result = 31 * result + (username != null ? username.hashCode() : 0);
+        result = 31 * result + (password != null ? password.hashCode() : 0);
+        result = 31 * result + (useGlobalCredential && credentialsId != null ? credentialsId.hashCode() :0);
         result = 31 * result + (secondaryServerInfo != null ? secondaryServerInfo.hashCode() : 0);
         return result;
     }
 
+    public static StandardUsernamePasswordCredentials lookupSystemCredentials(String credentialsId) {
+        return CredentialsMatchers.firstOrNull(
+                lookupCredentials(StandardUsernamePasswordCredentials.class, Jenkins.getInstance(), ACL.SYSTEM,
+                        HTTP_SCHEME, HTTPS_SCHEME),
+                CredentialsMatchers.withId(credentialsId)
+        );
+    }
+
     @Extension
     public static final class CredentialDescriptor extends Descriptor<Credential> {
+
+
         @Override
         public String getDisplayName() {
             return "Credential";
@@ -155,15 +189,37 @@ public class Credential extends AbstractDescribableImpl<Credential> {
             return validateOptionalUrl(secondaryProxyUrl);
         }
 
+        public ListBoxModel doFillCredentialsIdItems(@AncestorInPath Project context) {
+            // TODO: also add requirement on host derived from URL ?
+            List<StandardUsernamePasswordCredentials> creds = lookupCredentials(StandardUsernamePasswordCredentials.class, context,
+                    ACL.SYSTEM,
+                    HTTP_SCHEME, HTTPS_SCHEME);
+
+            return new StandardUsernameListBoxModel().withAll(creds);
+        }
 
         public FormValidation doValidate(@QueryParameter String xlReleaseServerUrl, @QueryParameter String xlReleaseClientProxyUrl, @QueryParameter String username,
-                                         @QueryParameter Secret password, @QueryParameter String secondaryServerUrl, @QueryParameter String secondaryProxyUrl) throws IOException {
+                                         @QueryParameter Secret password, @QueryParameter String secondaryServerUrl, @QueryParameter String secondaryProxyUrl, @QueryParameter boolean useGlobalCredential, @QueryParameter String credentialsId) throws IOException {
             try {
                 String serverUrl = Strings.isNullOrEmpty(secondaryServerUrl) ? xlReleaseServerUrl : secondaryServerUrl;
                 String proxyUrl = Strings.isNullOrEmpty(secondaryProxyUrl) ? xlReleaseClientProxyUrl : secondaryProxyUrl;
 
+                if (useGlobalCredential && Strings.isNullOrEmpty(credentialsId)) {
+                    return FormValidation.error("No credentials specified");
+                }
+                StandardUsernamePasswordCredentials credentials = lookupSystemCredentials(credentialsId);
+                if (credentials == null) {
+                    return FormValidation.error(String.format("Could not find credential with id '%s'", credentialsId));
+                }
+                if (serverUrl == null || serverUrl.isEmpty()) {
+                    return FormValidation.error("No server URL specified");
+                }
+
                 XLReleaseServerFactory factory = new XLReleaseServerFactory();
-                XLReleaseServerConnector xlReleaseServerConnector = factory.newInstance(serverUrl, proxyUrl, username, password.getPlainText());
+                XLReleaseServerConnector xlReleaseServerConnector =  xlReleaseServerConnector = factory.newInstance(serverUrl, proxyUrl, username, password.getPlainText());
+                if (useGlobalCredential) {
+                    xlReleaseServerConnector = factory.newInstance(serverUrl, proxyUrl, credentials.getUsername(), credentials.getPassword().getPlainText());
+                }
                 xlReleaseServerConnector.testConnection(); // throws IllegalStateException if creds invalid
                 return FormValidation.ok("Your XL Release instance [%s] version %s is alive, and your credentials are valid!", serverUrl, xlReleaseServerConnector.getVersion());
             } catch(IllegalStateException e) {

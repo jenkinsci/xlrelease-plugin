@@ -27,6 +27,8 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
+
+import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Transformer;
 import org.kohsuke.stapler.AncestorInPath;
@@ -165,9 +167,14 @@ public class XLReleaseNotifier extends Notifier {
             for (Credential credential : credentials) {
                 String serverUrl = credential.resolveServerUrl(xlReleaseServerUrl);
                 String proxyUrl = credential.resolveProxyUrl(xlReleaseClientProxyUrl);
-
-                credentialServerMap.put(credential.name, xlReleaseServerFactory.newInstance(serverUrl, proxyUrl,
-                        credential.username, credential.password != null ? credential.password.getPlainText() : ""));
+                if (credential.useGlobalCredential) {
+                    StandardUsernamePasswordCredentials cred =  Credential.lookupSystemCredentials(credential.credentialsId);
+                    credentialServerMap.put(credential.name, xlReleaseServerFactory.newInstance(serverUrl, proxyUrl,
+                            cred.getUsername(), cred.getPassword() != null ? cred.getPassword().getPlainText() : ""));
+                }else {
+                    credentialServerMap.put(credential.name, xlReleaseServerFactory.newInstance(serverUrl, proxyUrl,
+                            credential.username, credential.password != null ? credential.password.getPlainText() : ""));
+                }
             }
         }
 

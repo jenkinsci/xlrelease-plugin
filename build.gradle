@@ -124,7 +124,7 @@ dependencies {
     compile 'findbugs:annotations:1.0.0'
 
     additionalLibs "findbugs:annotations:1.0.0"
-
+    jenkinsPlugins "org.jenkins-ci.plugins:credentials:1.16.1@jar"
     testCompile "junit:junit:4.11"
     testCompile "org.powermock:powermock-module-junit4:1.5.3"
     testCompile "org.powermock:powermock-api-mockito:1.5.3"
