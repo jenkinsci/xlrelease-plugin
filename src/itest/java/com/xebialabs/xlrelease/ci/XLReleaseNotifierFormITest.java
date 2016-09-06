@@ -159,7 +159,7 @@ public class XLReleaseNotifierFormITest {
     private XLReleaseNotifier reconfigureWithEnvSettings(XLReleaseNotifier xlReleaseNotifier) throws Descriptor.FormException {
         StaplerRequest request = mock(StaplerRequest.class);
         when(request.bindJSONToList(eq(Credential.class), anyObject())).thenReturn(newArrayList(
-                new Credential(ADMIN_CREDENTIAL, username, Secret.fromString(password), null)));
+                new Credential(ADMIN_CREDENTIAL, username, Secret.fromString(password),null,false, null)));
         JSONObject json = new JSONObject();
         json.put("xlReleaseServerUrl", host);
         json.put("xlReleaseClientProxyUrl", "");
