@@ -162,8 +162,6 @@ public class Credential extends AbstractDescribableImpl<Credential> {
 
     @Extension
     public static final class CredentialDescriptor extends Descriptor<Credential> {
-
-
         @Override
         public String getDisplayName() {
             return "Credential";
@@ -198,29 +196,17 @@ public class Credential extends AbstractDescribableImpl<Credential> {
             return new StandardUsernameListBoxModel().withAll(creds);
         }
 
-        public FormValidation doValidate(@QueryParameter String xlReleaseServerUrl, @QueryParameter String xlReleaseClientProxyUrl, @QueryParameter String username,
-                                         @QueryParameter Secret password, @QueryParameter String secondaryServerUrl, @QueryParameter String secondaryProxyUrl, @QueryParameter boolean useGlobalCredential, @QueryParameter String credentialsId) throws IOException {
+        public FormValidation doValidateUserNamePassword(@QueryParameter String xlReleaseServerUrl, @QueryParameter String xlReleaseClientProxyUrl, @QueryParameter String username,
+                                         @QueryParameter Secret password, @QueryParameter String secondaryServerUrl, @QueryParameter String secondaryProxyUrl) throws IOException {
             try {
                 String serverUrl = Strings.isNullOrEmpty(secondaryServerUrl) ? xlReleaseServerUrl : secondaryServerUrl;
                 String proxyUrl = Strings.isNullOrEmpty(secondaryProxyUrl) ? xlReleaseClientProxyUrl : secondaryProxyUrl;
 
-                if (useGlobalCredential && Strings.isNullOrEmpty(credentialsId)) {
-                    return FormValidation.error("No credentials specified");
-                }
-                StandardUsernamePasswordCredentials credentials = lookupSystemCredentials(credentialsId);
-                if (useGlobalCredential && credentials == null) {
-                    return FormValidation.error(String.format("Could not find credential with id '%s'", credentialsId));
-                }
                 if (Strings.isNullOrEmpty(serverUrl)) {
                     return FormValidation.error("No server URL specified");
                 }
 
-                XLReleaseServerFactory factory = new XLReleaseServerFactory();
-                XLReleaseServerConnector xlReleaseServerConnector =  xlReleaseServerConnector = factory.newInstance(serverUrl, proxyUrl, username, password.getPlainText());
-                if (useGlobalCredential) {
-                    xlReleaseServerConnector = factory.newInstance(serverUrl, proxyUrl, credentials.getUsername(), credentials.getPassword().getPlainText());
-                }
-                xlReleaseServerConnector.testConnection(); // throws IllegalStateException if creds invalid
+                XLReleaseServerConnector xlReleaseServerConnector = validateConnection(serverUrl,proxyUrl,username,password.getPlainText());
                 return FormValidation.ok("Your XL Release instance [%s] version %s is alive, and your credentials are valid!", serverUrl, xlReleaseServerConnector.getVersion());
             } catch(IllegalStateException e) {
                 return FormValidation.error(e.getMessage());
@@ -228,6 +214,39 @@ public class Credential extends AbstractDescribableImpl<Credential> {
                 e.printStackTrace();
                 return FormValidation.error("XL Release configuration is not valid! %s", e.getMessage());
             }
+        }
+
+        public FormValidation doValidateCredential(@QueryParameter String xlReleaseServerUrl, @QueryParameter String xlReleaseClientProxyUrl, @QueryParameter String secondaryServerUrl, @QueryParameter String secondaryProxyUrl, @QueryParameter String credentialsId) throws IOException {
+            try {
+                String serverUrl = Strings.isNullOrEmpty(secondaryServerUrl) ? xlReleaseServerUrl : secondaryServerUrl;
+                String proxyUrl = Strings.isNullOrEmpty(secondaryProxyUrl) ? xlReleaseClientProxyUrl : secondaryProxyUrl;
+
+                if (Strings.isNullOrEmpty(credentialsId)) {
+                    return FormValidation.error("No credentials specified");
+                }
+                StandardUsernamePasswordCredentials credentials = lookupSystemCredentials(credentialsId);
+                if (credentials == null) {
+                    return FormValidation.error(String.format("Could not find credential with id '%s'", credentialsId));
+                }
+                if (Strings.isNullOrEmpty(serverUrl)) {
+                    return FormValidation.error("No server URL specified");
+                }
+
+                XLReleaseServerConnector xlReleaseServerConnector = validateConnection(serverUrl,proxyUrl,credentials.getUsername(), credentials.getPassword().getPlainText());
+                return FormValidation.ok("Your XL Release instance [%s] version %s is alive, and your credentials are valid!", serverUrl, xlReleaseServerConnector.getVersion());
+            } catch(IllegalStateException e) {
+                return FormValidation.error(e.getMessage());
+            } catch (Exception e) {
+                e.printStackTrace();
+                return FormValidation.error("XL Release configuration is not valid! %s", e.getMessage());
+            }
+        }
+
+        private XLReleaseServerConnector validateConnection(String serverUrl,String proxyUrl,String username,String password) throws Exception {
+            XLReleaseServerFactory factory = new XLReleaseServerFactory();
+            XLReleaseServerConnector xlReleaseServerConnector = factory.newInstance(serverUrl, proxyUrl, username, password);
+            xlReleaseServerConnector.testConnection(); // throws IllegalStateException if creds invalid
+            return xlReleaseServerConnector;
         }
     }
 
