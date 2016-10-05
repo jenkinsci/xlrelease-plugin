@@ -1,21 +1,21 @@
 /**
  * Copyright (c) 2014, XebiaLabs B.V., All rights reserved.
- *
- *
+ * <p/>
+ * <p/>
  * The XL Release plugin for Jenkins is licensed under the terms of the GPLv2
  * <http://www.gnu.org/licenses/old-licenses/gpl-2.0.html>, like most XebiaLabs Libraries.
  * There are special exceptions to the terms and conditions of the GPLv2 as it is applied to
  * this software, see the FLOSS License Exception
  * <https://github.com/jenkinsci/xlrelease-plugin/blob/master/LICENSE>.
- *
+ * <p/>
  * This program is free software; you can redistribute it and/or modify it under the terms
  * of the GNU General Public License as published by the Free Software Foundation; version 2
  * of the License.
- *
+ * <p/>
  * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public License for more details.
- *
+ * <p/>
  * You should have received a copy of the GNU General Public License along with this
  * program; if not, write to the Free Software Foundation, Inc., 51 Franklin St, Fifth
  * Floor, Boston, MA 02110-1301  USA
@@ -23,33 +23,31 @@
 
 package com.xebialabs.xlrelease.ci;
 
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.List;
-
 import com.cloudbees.plugins.credentials.CredentialsMatchers;
 import com.cloudbees.plugins.credentials.common.StandardUsernameListBoxModel;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import com.cloudbees.plugins.credentials.domains.SchemeRequirement;
+import com.google.common.base.Function;
+import com.google.common.base.Strings;
+import com.xebialabs.xlrelease.ci.server.XLReleaseServerConnector;
+import com.xebialabs.xlrelease.ci.server.XLReleaseServerFactory;
+import hudson.Extension;
+import hudson.model.AbstractDescribableImpl;
+import hudson.model.Descriptor;
 import hudson.model.Project;
 import hudson.security.ACL;
+import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
+import hudson.util.Secret;
 import jenkins.model.Jenkins;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
-import com.google.common.base.Function;
-import com.google.common.base.Strings;
 
-import com.xebialabs.xlrelease.ci.server.XLReleaseServerConnector;
-import com.xebialabs.xlrelease.ci.server.XLReleaseServerFactory;
-
-import hudson.Extension;
-import hudson.model.AbstractDescribableImpl;
-import hudson.model.Descriptor;
-import hudson.util.FormValidation;
-import hudson.util.Secret;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.List;
 
 import static com.cloudbees.plugins.credentials.CredentialsProvider.lookupCredentials;
 import static hudson.util.FormValidation.error;
@@ -73,7 +71,7 @@ public class Credential extends AbstractDescribableImpl<Credential> {
     public final boolean useGlobalCredential;
 
     @DataBoundConstructor
-    public Credential(String name, String username, Secret password, String credentialsId, boolean useGlobalCredential , SecondaryServerInfo secondaryServerInfo) {
+    public Credential(String name, String username, Secret password, String credentialsId, boolean useGlobalCredential, SecondaryServerInfo secondaryServerInfo) {
         this.name = name;
         this.username = username;
         this.password = password;
@@ -86,14 +84,14 @@ public class Credential extends AbstractDescribableImpl<Credential> {
         return name;
     }
 
-    public  String getSecondaryServerUrl() {
+    public String getSecondaryServerUrl() {
         if (secondaryServerInfo != null) {
             return secondaryServerInfo.secondaryServerUrl;
         }
         return null;
     }
 
-    public  String getSecondaryProxyUrl() {
+    public String getSecondaryProxyUrl() {
         if (secondaryServerInfo != null) {
             return secondaryServerInfo.secondaryProxyUrl;
         }
@@ -115,7 +113,7 @@ public class Credential extends AbstractDescribableImpl<Credential> {
     }
 
     public boolean showSecondaryServerSettings() {
-        return secondaryServerInfo!= null && secondaryServerInfo.showSecondaryServerSettings();
+        return secondaryServerInfo != null && secondaryServerInfo.showSecondaryServerSettings();
     }
 
     public boolean showGolbalCredentials() {
@@ -147,7 +145,7 @@ public class Credential extends AbstractDescribableImpl<Credential> {
         int result = name.hashCode();
         result = 31 * result + (username != null ? username.hashCode() : 0);
         result = 31 * result + (password != null ? password.hashCode() : 0);
-        result = 31 * result + (useGlobalCredential && credentialsId != null ? credentialsId.hashCode() :0);
+        result = 31 * result + (useGlobalCredential && credentialsId != null ? credentialsId.hashCode() : 0);
         result = 31 * result + (secondaryServerInfo != null ? secondaryServerInfo.hashCode() : 0);
         return result;
     }
@@ -162,8 +160,6 @@ public class Credential extends AbstractDescribableImpl<Credential> {
 
     @Extension
     public static final class CredentialDescriptor extends Descriptor<Credential> {
-
-
         @Override
         public String getDisplayName() {
             return "Credential";
@@ -175,7 +171,7 @@ public class Credential extends AbstractDescribableImpl<Credential> {
                     new URL(url);
                 }
             } catch (MalformedURLException e) {
-                return error("%s is not a valid URL.",url);
+                return error("%s is not a valid URL.", url);
             }
             return ok();
 
@@ -198,36 +194,57 @@ public class Credential extends AbstractDescribableImpl<Credential> {
             return new StandardUsernameListBoxModel().withAll(creds);
         }
 
-        public FormValidation doValidate(@QueryParameter String xlReleaseServerUrl, @QueryParameter String xlReleaseClientProxyUrl, @QueryParameter String username,
-                                         @QueryParameter Secret password, @QueryParameter String secondaryServerUrl, @QueryParameter String secondaryProxyUrl, @QueryParameter boolean useGlobalCredential, @QueryParameter String credentialsId) throws IOException {
+        public FormValidation doValidateUserNamePassword(@QueryParameter String xlReleaseServerUrl, @QueryParameter String xlReleaseClientProxyUrl, @QueryParameter String username,
+                                                         @QueryParameter Secret password, @QueryParameter String secondaryServerUrl, @QueryParameter String secondaryProxyUrl) throws IOException {
             try {
                 String serverUrl = Strings.isNullOrEmpty(secondaryServerUrl) ? xlReleaseServerUrl : secondaryServerUrl;
                 String proxyUrl = Strings.isNullOrEmpty(secondaryProxyUrl) ? xlReleaseClientProxyUrl : secondaryProxyUrl;
 
-                if (useGlobalCredential && Strings.isNullOrEmpty(credentialsId)) {
+                if (Strings.isNullOrEmpty(serverUrl)) {
+                    return FormValidation.error("No server URL specified");
+                }
+
+                XLReleaseServerConnector xlReleaseServerConnector = validateConnection(serverUrl, proxyUrl, username, password.getPlainText());
+                return FormValidation.ok("Your XL Release instance [%s] version %s is alive, and your credentials are valid!", serverUrl, xlReleaseServerConnector.getVersion());
+            } catch (IllegalStateException e) {
+                return FormValidation.error(e.getMessage());
+            } catch (Exception e) {
+                e.printStackTrace();
+                return FormValidation.error("XL Release configuration is not valid! %s", e.getMessage());
+            }
+        }
+
+        public FormValidation doValidateCredential(@QueryParameter String xlReleaseServerUrl, @QueryParameter String xlReleaseClientProxyUrl, @QueryParameter String secondaryServerUrl, @QueryParameter String secondaryProxyUrl, @QueryParameter String credentialsId) throws IOException {
+            try {
+                String serverUrl = Strings.isNullOrEmpty(secondaryServerUrl) ? xlReleaseServerUrl : secondaryServerUrl;
+                String proxyUrl = Strings.isNullOrEmpty(secondaryProxyUrl) ? xlReleaseClientProxyUrl : secondaryProxyUrl;
+
+                if (Strings.isNullOrEmpty(credentialsId)) {
                     return FormValidation.error("No credentials specified");
                 }
                 StandardUsernamePasswordCredentials credentials = lookupSystemCredentials(credentialsId);
-                if (useGlobalCredential && credentials == null) {
+                if (credentials == null) {
                     return FormValidation.error(String.format("Could not find credential with id '%s'", credentialsId));
                 }
                 if (Strings.isNullOrEmpty(serverUrl)) {
                     return FormValidation.error("No server URL specified");
                 }
 
-                XLReleaseServerFactory factory = new XLReleaseServerFactory();
-                XLReleaseServerConnector xlReleaseServerConnector =  xlReleaseServerConnector = factory.newInstance(serverUrl, proxyUrl, username, password.getPlainText());
-                if (useGlobalCredential) {
-                    xlReleaseServerConnector = factory.newInstance(serverUrl, proxyUrl, credentials.getUsername(), credentials.getPassword().getPlainText());
-                }
-                xlReleaseServerConnector.testConnection(); // throws IllegalStateException if creds invalid
+                XLReleaseServerConnector xlReleaseServerConnector = validateConnection(serverUrl, proxyUrl, credentials.getUsername(), credentials.getPassword().getPlainText());
                 return FormValidation.ok("Your XL Release instance [%s] version %s is alive, and your credentials are valid!", serverUrl, xlReleaseServerConnector.getVersion());
-            } catch(IllegalStateException e) {
+            } catch (IllegalStateException e) {
                 return FormValidation.error(e.getMessage());
             } catch (Exception e) {
                 e.printStackTrace();
                 return FormValidation.error("XL Release configuration is not valid! %s", e.getMessage());
             }
+        }
+
+        private XLReleaseServerConnector validateConnection(String serverUrl, String proxyUrl, String username, String password) throws Exception {
+            XLReleaseServerFactory factory = new XLReleaseServerFactory();
+            XLReleaseServerConnector xlReleaseServerConnector = factory.newInstance(serverUrl, proxyUrl, username, password);
+            xlReleaseServerConnector.testConnection(); // throws IllegalStateException if creds invalid
+            return xlReleaseServerConnector;
         }
     }
 
