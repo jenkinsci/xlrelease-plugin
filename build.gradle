@@ -67,7 +67,7 @@ buildscript {
 
 
 jenkinsPlugin {
-    coreVersion = '1.609.1' // we need to support LTS versions
+    coreVersion = '1.509.4' // we need to support LTS versions
     displayName = "XebiaLabs XL Release Plugin"
     url = 'https://wiki.jenkins-ci.org/display/JENKINS/XL+Release+Plugin'
     gitHubUrl = 'https://github.com/jenkinsci/XL+Release-plugin'
