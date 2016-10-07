@@ -44,6 +44,10 @@ repositories {
         url "${projectDir}/repo"
     }
     maven {
+        name "netbeans"
+        delegate.url("http://bits.netbeans.org/maven2")
+    }
+    maven {
         name "jenkins"
         delegate.url("http://repo.jenkins-ci.org/releases")
     }
@@ -61,7 +65,7 @@ buildscript {
 
     }
     dependencies {
-        classpath 'org.jenkins-ci.tools:gradle-jpi-plugin:0.10.0'
+        classpath 'org.jenkins-ci.tools:gradle-jpi-plugin:0.18.0'
     }
 }
 
