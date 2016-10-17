@@ -151,9 +151,9 @@ public class XLReleaseNotifierFormITest {
 
     private String findReleaseId(List<String> log) {
         for (String line : log) {
-            Matcher matcher = Pattern.compile(".*\\s(\\S*Release\\d+).*").matcher(line);
+            Matcher matcher = Pattern.compile(".*\"(Applications/.*Release\\d+).*").matcher(line);
             if (matcher.matches()) {
-                return "Applications/" + matcher.group(1);
+                return matcher.group(1);
             }
         }
         return null;
