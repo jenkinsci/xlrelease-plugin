@@ -31,6 +31,7 @@ import java.util.*;
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.Transformer;
+import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
@@ -106,33 +107,35 @@ public class XLReleaseNotifier extends Notifier {
         }
 
         // createRelease
-        Release release = createRelease(template, resolvedVersion, resolvedVariables, deploymentListener);
+        Release release = createRelease(template, resolvedVersion, resolvedVariables);
+        deploymentListener.info(Messages.XLReleaseNotifier_createRelease(template, resolvedVersion, release.getId()));
 
         // startRelease
         if (startRelease) {
-            startRelease(release, template, resolvedVersion, deploymentListener);
+            deploymentListener.info(Messages.XLReleaseNotifier_startRelease(template, resolvedVersion, release.getId()));
+            startRelease(release);
         }
 
         return true;
     }
 
-    private Release createRelease(final String resolvedTemplate, final String resolvedVersion, final List<NameValuePair> resolvedVariables, final JenkinsReleaseListener deploymentListener) {
+    public Release createRelease(final String resolvedTemplate, final String resolvedVersion, final List<NameValuePair> resolvedVariables) {
         // create a new release instance
         Release release = getXLReleaseServer().createRelease(resolvedTemplate, resolvedVersion, resolvedVariables);
-        deploymentListener.info(Messages.XLReleaseNotifier_createRelease(resolvedTemplate, resolvedVersion, release.getId()));
         return release;
     }
 
-    private void startRelease(final Release release, final String resolvedTemplate, final String resolvedVersion, final JenkinsReleaseListener deploymentListener) {
-        deploymentListener.info(Messages.XLReleaseNotifier_startRelease(resolvedTemplate, resolvedVersion, release.getId()));
-
+    public void startRelease(final Release release) {
         // start the release
         getXLReleaseServer().startRelease(release.getInternalId());
     }
 
 
     private XLReleaseServerConnector getXLReleaseServer() {
-        return getDescriptor().getXLReleaseServer(credential);
+        XLReleaseServerConnector connector = getDescriptor().getXLReleaseServer(credential);
+        if (connector == null)
+            throw new RuntimeException(Messages.XLReleaseNotifier_credentialNotFound(credential));
+        return connector;
     }
 
     @Override
@@ -160,7 +163,6 @@ public class XLReleaseNotifier extends Notifier {
 
         public XLReleaseDescriptor() {
             load();  //deserialize from xml
-            mapCredentialsByName();
         }
 
         private void mapCredentialsByName() {
@@ -209,6 +211,12 @@ public class XLReleaseNotifier extends Notifier {
             }
             return ok();
 
+        }
+
+        @Override
+        public synchronized void load() {
+            super.load();
+            mapCredentialsByName();
         }
 
         public FormValidation doCheckXLReleaseServerUrl(@QueryParameter String xlReleaseServerUrl) {
@@ -283,13 +291,18 @@ public class XLReleaseNotifier extends Notifier {
         }
 
         public ListBoxModel doFillCredentialItems() {
+
             ListBoxModel m = new ListBoxModel();
+            m.add("-- Please Select --","");
             for (Credential c : credentials)
                 m.add(c.name, c.name);
             return m;
         }
 
         public FormValidation doCheckCredential(@QueryParameter String credential) {
+            if (StringUtils.isEmpty(credential)){
+                return FormValidation.error("Please select a valid credential");
+            }
             return warning("Changing credentials may unintentionally change your available templates");
         }
 
