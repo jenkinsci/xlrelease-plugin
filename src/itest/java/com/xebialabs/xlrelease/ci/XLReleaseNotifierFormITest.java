@@ -35,7 +35,10 @@ import org.jvnet.hudson.test.recipes.LocalData;
 import org.kohsuke.stapler.StaplerRequest;
 import com.gargoylesoftware.htmlunit.html.HtmlForm;
 import com.gargoylesoftware.htmlunit.html.HtmlSelect;
-import com.sun.jersey.api.client.*;
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.GenericType;
+import com.sun.jersey.api.client.UniformInterfaceException;
+import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
@@ -148,9 +151,9 @@ public class XLReleaseNotifierFormITest {
 
     private String findReleaseId(List<String> log) {
         for (String line : log) {
-            Matcher matcher = Pattern.compile(".*(Release\\d+).*").matcher(line);
+            Matcher matcher = Pattern.compile(".*\"(Applications/.*Release\\d+).*").matcher(line);
             if (matcher.matches()) {
-                return "Applications/" + matcher.group(1);
+                return matcher.group(1);
             }
         }
         return null;

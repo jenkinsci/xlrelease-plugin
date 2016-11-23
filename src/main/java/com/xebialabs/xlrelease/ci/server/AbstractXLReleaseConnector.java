@@ -151,6 +151,9 @@ public abstract class AbstractXLReleaseConnector implements XLReleaseServerConne
                 return ((Release) o).getTitle().equals(templateTitle);
             }
         });
+        if (templates.size() == 0) {
+            throw new RuntimeException("No template found for template id : " + templateTitle);
+        }
         return templates.get(0).getInternalId();
     }
 
