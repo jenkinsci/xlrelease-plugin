@@ -44,4 +44,6 @@ public interface XLReleaseServerConnector {
     Release createRelease(String resolvedTemplate, String resolvedVersion, List<NameValuePair> variables);
 
     void startRelease(String releaseId);
+
+    String getServerURL();
 }
