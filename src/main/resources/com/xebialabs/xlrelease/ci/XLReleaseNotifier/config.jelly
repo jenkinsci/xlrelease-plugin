@@ -4,8 +4,10 @@
         <f:select/>
     </f:entry>
     <f:entry title="${%Template}" field="template" help="/plugin/xlrelease-plugin/help-template.html">
-        <f:select/>
+        <f:textbox />
     </f:entry>
+
+    <f:validateButton title="${%Validate template}" with="credential,template" method="validateTemplate" />
 
     <f:entry title="${%Name}" field="version" help="/plugin/xlrelease-plugin/help-name.html">
             <f:textbox default="Release for $BUILD_TAG"/>

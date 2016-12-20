@@ -80,4 +80,9 @@ public class XLReleaseServerImplMock implements XLReleaseServerConnector {
     public void startRelease(final String releaseId) {
 
     }
+
+    @Override
+    public String getServerURL() {
+        return "http://localhost:5516";
+    }
 }

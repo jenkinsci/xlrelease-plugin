@@ -29,9 +29,10 @@ import java.net.URL;
 import java.util.*;
 
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
+import com.sun.jersey.api.client.UniformInterfaceException;
+import hudson.model.AutoCompletionCandidates;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.Transformer;
-import org.kohsuke.stapler.AncestorInPath;
+import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
@@ -112,7 +113,8 @@ public class XLReleaseNotifier extends Notifier {
         if (startRelease) {
             startRelease(release, template, resolvedVersion, deploymentListener);
         }
-
+        String releaseUrl = getXLReleaseServer().getServerURL() + release.getReleaseURL();
+        deploymentListener.info(Messages.XLReleaseNotifier_releaseLink(releaseUrl));
         return true;
     }
 
@@ -155,7 +157,7 @@ public class XLReleaseNotifier extends Notifier {
 
         private final transient Map<String,XLReleaseServerConnector> credentialServerMap = newHashMap();
         private transient static XLReleaseServerFactory xlReleaseServerFactory = new XLReleaseServerFactory();
-
+        private transient String lastCredential;
         private Release release;
 
         public XLReleaseDescriptor() {
@@ -222,14 +224,17 @@ public class XLReleaseNotifier extends Notifier {
             return validateOptionalUrl(xlReleaseClientProxyUrl);
         }
 
-        public FormValidation doCheckTemplate(@QueryParameter String credential, @QueryParameter final String value, @AncestorInPath AbstractProject project) {
+        public FormValidation doValidateTemplate(@QueryParameter String credential, @QueryParameter final String template) {
             try {
-                this.release = getTemplate(credential,value);
-                if(this.release != null) {
+
+                this.release = getTemplate(credential,template);
+                if(this.release != null && !"folder".equals(release.getStatus())) {
                     return warning("Changing template may unintentionally change your variables");
                 }
-                return warning("Template does not exist.");
-            } catch (Exception exp) {
+                return error("Template does not exist.");
+            } catch (UniformInterfaceException exp){
+                return error("Template does not exist.");
+            }catch (Exception exp) {
                 return warning("Failed to communicate with XL Release server");
             }
         }
@@ -251,24 +256,14 @@ public class XLReleaseNotifier extends Notifier {
             return TemplateVariable.toMap(variables);
         }
 
-        public ListBoxModel doFillTemplateItems(@QueryParameter String credential) {
-            try {
-                List<Release> templates = getXLReleaseServer(credential).getAllTemplates();
-
-                @SuppressWarnings("unchecked")
-                Collection<String> titles = CollectionUtils.collect(templates, new Transformer() {
-                    public Object transform(Object o) {
-                        return ((Release) o).getTitle();
-                    }
-                });
-
-                return of(titles);
-            } catch (Exception exp) {
-                return emptyModel();
+        public AutoCompletionCandidates doAutoCompleteTemplate(@QueryParameter final String value) {
+            AutoCompletionCandidates candidates = new AutoCompletionCandidates();
+            List<Release> releases = getXLReleaseServer(lastCredential).searchTemplates(value);
+            for (Release release:releases) {
+                candidates.add(release.getTitle());
             }
+            return candidates;
         }
-
-
 
         public List<Credential> getCredentials() {
             return credentials;
@@ -284,12 +279,17 @@ public class XLReleaseNotifier extends Notifier {
 
         public ListBoxModel doFillCredentialItems() {
             ListBoxModel m = new ListBoxModel();
+            m.add("-- Please Select --", "");
             for (Credential c : credentials)
                 m.add(c.name, c.name);
             return m;
         }
 
         public FormValidation doCheckCredential(@QueryParameter String credential) {
+            lastCredential = credential;
+            if (StringUtils.isEmpty(credential)) {
+               return error("Please select a valid credential");
+            }
             return warning("Changing credentials may unintentionally change your available templates");
         }
 

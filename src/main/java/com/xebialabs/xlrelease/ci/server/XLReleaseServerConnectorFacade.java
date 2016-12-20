@@ -36,15 +36,22 @@ public class XLReleaseServerConnectorFacade implements XLReleaseServerConnector 
 
     private XLReleaseServerConnector connectorPre48;
     private XLReleaseServerConnector defaultConnector;
+    private XLReleaseServerConnector connectorPost6;
 
     XLReleaseServerConnectorFacade(String serverUrl, String proxyUrl, String username, String password) {
         this.connectorPre48 = new XLReleaseConnectorImplPre48(serverUrl, proxyUrl, username, password);
         this.defaultConnector = new XLReleaseConnectorImpl(serverUrl, proxyUrl, username, password);
+        this.connectorPost6 = new XLReleaseConnectorPost6Impl(serverUrl, proxyUrl, username, password);
     }
 
     private XLReleaseServerConnector getConnectorForXlrVersion() {
         String versionString = getVersion();
-        return isVersionPre48(versionString) ? connectorPre48 : defaultConnector;
+        if (isVersionPre48(versionString))
+            return connectorPre48;
+        else if (isVersionPost60(versionString))
+            return connectorPost6;
+
+        return defaultConnector;
     }
 
     @Override
@@ -82,6 +89,11 @@ public class XLReleaseServerConnectorFacade implements XLReleaseServerConnector 
         getConnectorForXlrVersion().startRelease(releaseId);
     }
 
+    @Override
+    public String getServerURL() {
+        return getConnectorForXlrVersion().getServerURL();
+    }
+
     @VisibleForTesting
     boolean isVersionPre48(String versionString) {
         if (versionString == null) {
@@ -97,5 +109,20 @@ public class XLReleaseServerConnectorFacade implements XLReleaseServerConnector 
         int major = Integer.parseInt(matcher.group(1));
         int minor = Integer.parseInt(matcher.group(2));
         return major < 4 || major == 4 && minor < 8;
+    }
+
+    boolean isVersionPost60(String versionString) {
+        if (versionString == null) {
+            return false;
+        }
+        if (versionString.startsWith("0.0.")) {
+            return false;
+        }
+        Matcher matcher = Pattern.compile("^(\\d+)\\.(\\d+)\\..*").matcher(versionString);
+        if (!matcher.matches()) {
+            return false;
+        }
+        int major = Integer.parseInt(matcher.group(1));
+        return major >= 6;
     }
 }

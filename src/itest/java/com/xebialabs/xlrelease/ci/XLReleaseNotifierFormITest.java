@@ -27,6 +27,8 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.ws.rs.core.MediaType;
+
+import com.gargoylesoftware.htmlunit.html.HtmlInput;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -34,8 +36,10 @@ import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.recipes.LocalData;
 import org.kohsuke.stapler.StaplerRequest;
 import com.gargoylesoftware.htmlunit.html.HtmlForm;
-import com.gargoylesoftware.htmlunit.html.HtmlSelect;
-import com.sun.jersey.api.client.*;
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.GenericType;
+import com.sun.jersey.api.client.UniformInterfaceException;
+import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
@@ -50,7 +54,6 @@ import net.sf.json.JSONObject;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
@@ -61,8 +64,8 @@ import static org.mockito.Mockito.when;
 
 public class XLReleaseNotifierFormITest {
 
-    private static final String USER_VARIABLE = "${user}";
-    private static final String TEMPLATE_NAME = "Welcome to XL Release!";
+    private static final String USER_VARIABLE = "user";
+    private static final String TEMPLATE_NAME = "Samples & Tutorials/Welcome to XL Release!";
     private static final String RELEASE_TITLE = "Release created with jenkins plugin ${BUILD_NUMBER}";
     private static final String ADMIN_CREDENTIAL = "admin_credential";
 
@@ -97,10 +100,9 @@ public class XLReleaseNotifierFormITest {
         project.getPublishersList().add(before);
 
         HtmlForm xlrForm = jenkins.createWebClient().getPage(project, "configure").getFormByName("config");
-        HtmlSelect templateSelect = xlrForm.getSelectByName("_.template");
+        HtmlInput templateSelect = xlrForm.getInputsByName("_.template").get(0);
 
-        assertThat(templateSelect.getOptionSize(), greaterThan(1));
-        assertThat(templateSelect.getSelectedOptions().get(0).asText(), equalTo(TEMPLATE_NAME));
+        assertThat(templateSelect.asText(), equalTo(TEMPLATE_NAME));
         assertThat(xlrForm.getInputByName("_.version").asText(), equalTo(RELEASE_TITLE));
         assertThat(xlrForm.getSelectByName("_.propertyName").getSelectedOptions().get(0).asText(), equalTo(USER_VARIABLE));
     }
@@ -148,9 +150,9 @@ public class XLReleaseNotifierFormITest {
 
     private String findReleaseId(List<String> log) {
         for (String line : log) {
-            Matcher matcher = Pattern.compile(".*(Release\\d+).*").matcher(line);
+            Matcher matcher = Pattern.compile(".*\"(Applications/.*Release\\d+).*").matcher(line);
             if (matcher.matches()) {
-                return "Applications/" + matcher.group(1);
+                return matcher.group(1);
             }
         }
         return null;

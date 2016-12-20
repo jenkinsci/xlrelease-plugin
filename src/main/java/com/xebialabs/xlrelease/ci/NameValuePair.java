@@ -25,6 +25,8 @@ package com.xebialabs.xlrelease.ci;
 
 
 import java.util.Map;
+
+import com.xebialabs.xlrelease.ci.util.TemplateVariable;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
@@ -39,16 +41,24 @@ import jenkins.model.Jenkins;
 
 import static com.xebialabs.xlrelease.ci.XLReleaseNotifier.XLReleaseDescriptor;
 import static com.xebialabs.xlrelease.ci.util.ListBoxModels.emptyModel;
+import static com.xebialabs.xlrelease.ci.util.TemplateVariable.isVariable;
 
 public class NameValuePair extends AbstractDescribableImpl<NameValuePair> {
 
     public String propertyName;
     public String propertyValue;
 
+    public static String VARIABLE_PREFIX = "${";
+    public static String VARIABLE_SUFFIX = "}";
+
     @DataBoundConstructor
     public NameValuePair(String propertyName, String propertyValue) {
         this.propertyName = propertyName;
         this.propertyValue = propertyValue;
+        if (!isVariable(propertyName)) {
+            this.propertyName = VARIABLE_PREFIX + propertyName + VARIABLE_SUFFIX;
+        }
+
     }
 
     @Extension
