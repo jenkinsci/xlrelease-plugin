@@ -23,19 +23,8 @@
 
 package com.xebialabs.xlrelease.ci;
 
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import javax.ws.rs.core.MediaType;
-
-import com.gargoylesoftware.htmlunit.html.HtmlInput;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.jvnet.hudson.test.JenkinsRule;
-import org.jvnet.hudson.test.recipes.LocalData;
-import org.kohsuke.stapler.StaplerRequest;
 import com.gargoylesoftware.htmlunit.html.HtmlForm;
+import com.gargoylesoftware.htmlunit.html.HtmlInput;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.GenericType;
 import com.sun.jersey.api.client.UniformInterfaceException;
@@ -43,14 +32,31 @@ import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
-
 import com.xebialabs.xlrelease.ci.util.Release;
-
 import hudson.model.Descriptor;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
+import hudson.model.Result;
 import hudson.util.Secret;
 import net.sf.json.JSONObject;
+import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
+import org.jenkinsci.plugins.workflow.job.WorkflowJob;
+import org.jenkinsci.plugins.workflow.job.WorkflowRun;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.recipes.LocalData;
+import org.kohsuke.stapler.StaplerRequest;
+
+import javax.ws.rs.core.MediaType;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static org.hamcrest.Matchers.equalTo;
@@ -122,6 +128,17 @@ public class XLReleaseNotifierFormITest {
         waitForReleaseStarted(releaseId);
     }
 
+    @Test
+    @LocalData
+    public void shouldStartReleaseWithJenkinsFile() throws Exception {
+        WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "workflow");
+        job.setDefinition(new CpsFlowDefinition(getJenkinsFileScript(), true));
+        WorkflowRun run = jenkins.assertBuildStatus(Result.SUCCESS, job.scheduleBuild2(0).get());
+        String releaseId = findReleaseId(run.getLog(20));
+        assertThat(releaseId, notNullValue());
+        waitForReleaseStarted(releaseId);
+    }
+
     private void waitForReleaseStarted(final String releaseId) throws InterruptedException {
         ClientConfig config = new DefaultClientConfig();
         Client client = Client.create(config);
@@ -169,6 +186,16 @@ public class XLReleaseNotifierFormITest {
         xlReleaseNotifier.getDescriptor().configure(request, json);
 
         return xlReleaseNotifier;
+    }
+
+    private String getJenkinsFileScript () throws IOException {
+        String jenkinsFile = "";
+        try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+
+            Files.copy(Paths.get(getClass().getClassLoader().getResource("JenkinsFile").getFile()), outputStream);
+            jenkinsFile = new String(outputStream.toByteArray());
+        }
+        return jenkinsFile;
     }
 
 }

@@ -27,6 +27,7 @@ package com.xebialabs.xlrelease.ci;
 import java.util.Map;
 
 import com.xebialabs.xlrelease.ci.util.TemplateVariable;
+import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
@@ -55,10 +56,14 @@ public class NameValuePair extends AbstractDescribableImpl<NameValuePair> {
     public NameValuePair(String propertyName, String propertyValue) {
         this.propertyName = propertyName;
         this.propertyValue = propertyValue;
-        if (!isVariable(propertyName)) {
-            this.propertyName = VARIABLE_PREFIX + propertyName + VARIABLE_SUFFIX;
-        }
+    }
 
+    public String getPropertyName() {
+
+        if (!isVariable(propertyName)) {
+            return VARIABLE_PREFIX + propertyName + VARIABLE_SUFFIX;
+        }
+        return propertyName;
     }
 
     @Extension
@@ -68,8 +73,10 @@ public class NameValuePair extends AbstractDescribableImpl<NameValuePair> {
             return "NameValuePair";
         }
 
-        public ListBoxModel doFillPropertyNameItems(@QueryParameter @RelativePath(value = "..") String credential,
+        public ListBoxModel doFillPropertyNameItems(@QueryParameter @RelativePath(value = "..") String credential, @QueryParameter @RelativePath(value = "..") String serverCredentials,
                 @QueryParameter @RelativePath(value = "..") String template) {
+            if (StringUtils.isEmpty(credential))
+                credential = serverCredentials;
             Map<String, String> variables = getXLReleaseDescriptor().getVariablesOf(credential, template);
             if (variables == null) {
                 return emptyModel();

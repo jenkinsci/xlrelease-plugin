@@ -24,10 +24,12 @@
 
 package com.xebialabs.xlrelease.ci.server;
 
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Proxy;
 import java.util.List;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
-import com.google.common.reflect.Reflection;
+
 
 
 public class XLReleaseServerFactory {
@@ -39,7 +41,7 @@ public class XLReleaseServerFactory {
 
     public XLReleaseServerConnector newInstance(String serverUrl, String proxyUrl, String username, String password) {
         XLReleaseServerConnectorFacade server = new XLReleaseServerConnectorFacade(serverUrl, proxyUrl, username, password);
-        return Reflection.newProxy(XLReleaseServerConnector.class, new PluginFirstClassloaderInvocationHandler(server));
+        return newProxy(XLReleaseServerConnector.class, new PluginFirstClassloaderInvocationHandler(server));
     }
 
 
@@ -55,5 +57,30 @@ public class XLReleaseServerFactory {
             list.remove(nameParts.length - 1);
         }
         return Joiner.on("/").join(list);
+    }
+
+    public static <T> T newProxy(
+            Class<T> interfaceType, InvocationHandler handler) {
+        checkNotNull(interfaceType);
+        checkNotNull(handler);
+        checkArgument(interfaceType.isInterface());
+        Object object = Proxy.newProxyInstance(
+                interfaceType.getClassLoader(),
+                new Class<?>[] { interfaceType },
+                handler);
+        return interfaceType.cast(object);
+    }
+
+    public static <T> T checkNotNull(T reference) {
+        if (reference == null) {
+            throw new NullPointerException();
+        }
+        return reference;
+    }
+
+    public static void checkArgument(boolean expression) {
+        if (!expression) {
+            throw new IllegalArgumentException();
+        }
     }
 }

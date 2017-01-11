@@ -25,20 +25,21 @@ package com.xebialabs.xlrelease.ci.util;
 
 import java.io.Serializable;
 
+import hudson.model.TaskListener;
 import org.jvnet.localizer.Localizable;
 
 import hudson.model.BuildListener;
 
 public class JenkinsReleaseListener implements Serializable {
 
-    private final BuildListener listener;
+    private final TaskListener listener;
     private final boolean debug;
 
-    public JenkinsReleaseListener(final BuildListener listener) {
+    public JenkinsReleaseListener(final TaskListener listener) {
         this(listener, false);
     }
 
-    public JenkinsReleaseListener(BuildListener listener, boolean debug) {
+    public JenkinsReleaseListener(TaskListener listener, boolean debug) {
         this.listener = listener;
         this.debug = debug;
     }
