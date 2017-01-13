@@ -79,3 +79,7 @@ Then add them to dependencies:
 ### Releasing ###
 
 See the [article on XebiaLabs wiki](https://xebialabs.atlassian.net/wiki/display/Labs/Developing+and+releasing+the+Jenkins+plugin).
+
+### Notes ###
+
+As doCheck and doAutoComplete not work seamlessly, We gave a validate button for version 6.0.0 of plugin. For more information see Jenkins Bug [JENKINS-37204](https://issues.jenkins-ci.org/browse/JENKINS-37204) 

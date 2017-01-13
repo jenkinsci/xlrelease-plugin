@@ -71,7 +71,7 @@ buildscript {
 
 
 jenkinsPlugin {
-    coreVersion = '1.509.4' // we need to support LTS versions
+    coreVersion = '1.642.3' // we need to support LTS versions
     displayName = "XebiaLabs XL Release Plugin"
     url = 'https://wiki.jenkins-ci.org/display/JENKINS/XL+Release+Plugin'
     gitHubUrl = 'https://github.com/jenkinsci/XL+Release-plugin'
@@ -115,7 +115,6 @@ configurations.all {
 }
 
 dependencies {
-    compile "com.google.guava:guava:13.0"
     compile "com.sun.jersey:jersey-client:1.18"
     compile "com.sun.jersey:jersey-core:1.18"
     compile "com.sun.jersey:jersey-json:1.18"
@@ -128,7 +127,10 @@ dependencies {
     compile 'findbugs:annotations:1.0.0'
 
     additionalLibs "findbugs:annotations:1.0.0"
+
     jenkinsPlugins "org.jenkins-ci.plugins:credentials:1.16.1@jar"
+    jenkinsPlugins 'org.jenkins-ci.plugins.workflow:workflow-step-api:1.10@jar'
+
     testCompile "junit:junit:4.11"
     testCompile "org.powermock:powermock-module-junit4:1.5.3"
     testCompile "org.powermock:powermock-api-mockito:1.5.3"
@@ -142,6 +144,12 @@ dependencies {
     testCompile "org.jenkins-ci.modules:upstart-slave-installer:1.1@jm"
 
     jenkinsTest 'org.jenkins-ci.main:maven-plugin:1.480@jar'
+    jenkinsTest "org.jenkins-ci.plugins:credentials:1.16.1@jar"
+
+    jenkinsTest ("org.jenkins-ci.plugins.workflow:workflow-step-api:1.10@jar")  { transitive = true }
+    jenkinsTest ("org.jenkins-ci.plugins.workflow:workflow-support:1.10@jar") { transitive = true }
+    jenkinsTest ("org.jenkins-ci.plugins.workflow:workflow-cps:1.10@jar") { transitive = true }
+
 }
 configurations {
     all*.exclude group: 'org.jenkins-ci.modules', module: 'launchd-slave-installer'
@@ -176,6 +184,10 @@ dependencies {
     itestCompile "org.jenkins-ci.plugins:mailer:1.4@jar"
     itestCompile "org.jenkins-ci.main:maven-plugin:1.509.1@jar"
     itestCompile "org.jenkins-ci.plugins:javadoc:1.0@jar"
+
+    itestCompile "org.jenkins-ci.plugins.workflow:workflow-job:1.10@jar"
+    itestCompile "org.jenkins-ci.plugins.workflow:workflow-cps:1.10@jar"
+    itestCompile "org.jenkins-ci.plugins.workflow:workflow-api:1.10@jar"
 }
 
 task itest(type: Test) {

@@ -151,6 +151,9 @@ public abstract class AbstractXLReleaseConnector implements XLReleaseServerConne
                 return ((Release) o).getTitle().equals(templateTitle);
             }
         });
+        if (templates.size() == 0) {
+            throw new RuntimeException("No template found for template id : " + templateTitle);
+        }
         return templates.get(0).getInternalId();
     }
 
@@ -165,7 +168,7 @@ public abstract class AbstractXLReleaseConnector implements XLReleaseServerConne
     protected Map<String, String> convertToVariablesMap(final List<NameValuePair> variables) {
         Map<String, String> variablesMap = new HashMap<String, String>();
         for (NameValuePair variable : variables) {
-            variablesMap.put(variable.propertyName, variable.propertyValue);
+            variablesMap.put(variable.getPropertyName(), variable.propertyValue);
         }
         return variablesMap;
     }

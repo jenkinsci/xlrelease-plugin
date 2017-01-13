@@ -70,18 +70,6 @@ public class XLReleaseConnectorImpl extends AbstractXLReleaseConnector {
                 return false;
             }
         });
-        CollectionUtils.transform(variables, new Transformer() {
-            @Override
-            public Object transform(final Object o) {
-                if (o instanceof TemplateVariable) {
-                    String key = ((TemplateVariable) o).getKey();
-                    if (key != null) {
-                        ((TemplateVariable) o).setKey(String.format("${%s}", key));
-                    }
-                }
-                return o;
-            }
-        });
         return variables;
     }
 }

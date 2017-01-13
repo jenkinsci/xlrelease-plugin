@@ -23,34 +23,19 @@
 
 package com.xebialabs.xlrelease.ci;
 
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.*;
-
 import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
-import com.sun.jersey.api.client.UniformInterfaceException;
-import hudson.model.AutoCompletionCandidates;
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang.StringUtils;
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.QueryParameter;
-import org.kohsuke.stapler.StaplerRequest;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
-
+import com.sun.jersey.api.client.UniformInterfaceException;
 import com.xebialabs.xlrelease.ci.server.XLReleaseServerConnector;
 import com.xebialabs.xlrelease.ci.server.XLReleaseServerFactory;
 import com.xebialabs.xlrelease.ci.util.JenkinsReleaseListener;
 import com.xebialabs.xlrelease.ci.util.Release;
 import com.xebialabs.xlrelease.ci.util.TemplateVariable;
-
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.Launcher;
-import hudson.model.AbstractBuild;
-import hudson.model.AbstractProject;
-import hudson.model.BuildListener;
+import hudson.model.*;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Notifier;
@@ -58,15 +43,24 @@ import hudson.tasks.Publisher;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import net.sf.json.JSONObject;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang.StringUtils;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.StaplerRequest;
+
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Maps.newHashMap;
-import static com.xebialabs.xlrelease.ci.util.ListBoxModels.emptyModel;
-import static com.xebialabs.xlrelease.ci.util.ListBoxModels.of;
-import static hudson.util.FormValidation.error;
-import static hudson.util.FormValidation.ok;
-import static hudson.util.FormValidation.warning;
+import static hudson.util.FormValidation.*;
 
 public class XLReleaseNotifier extends Notifier {
 
@@ -93,12 +87,13 @@ public class XLReleaseNotifier extends Notifier {
 
     @Override
     public boolean perform(final AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
+        return executeRelease(build.getEnvironment(listener),listener);
+    }
+
+    public boolean executeRelease (EnvVars envVars, TaskListener listener) {
         final JenkinsReleaseListener deploymentListener = new JenkinsReleaseListener(listener);
 
-        final EnvVars envVars = build.getEnvironment(listener);
         String resolvedVersion = envVars.expand(version);
-
-
         List<NameValuePair> resolvedVariables = new ArrayList<NameValuePair>();
         if (CollectionUtils.isNotEmpty(variables)) {
             for (NameValuePair nameValuePair : variables) {
@@ -107,34 +102,36 @@ public class XLReleaseNotifier extends Notifier {
         }
 
         // createRelease
-        Release release = createRelease(template, resolvedVersion, resolvedVariables, deploymentListener);
+        Release release = createRelease(template, resolvedVersion, resolvedVariables);
+        deploymentListener.info(Messages.XLReleaseNotifier_createRelease(template, resolvedVersion, release.getId()));
 
         // startRelease
         if (startRelease) {
-            startRelease(release, template, resolvedVersion, deploymentListener);
+            deploymentListener.info(Messages.XLReleaseNotifier_startRelease(template, resolvedVersion, release.getId()));
+            startRelease(release);
         }
         String releaseUrl = getXLReleaseServer().getServerURL() + release.getReleaseURL();
         deploymentListener.info(Messages.XLReleaseNotifier_releaseLink(releaseUrl));
         return true;
+
     }
 
-    private Release createRelease(final String resolvedTemplate, final String resolvedVersion, final List<NameValuePair> resolvedVariables, final JenkinsReleaseListener deploymentListener) {
+    private Release createRelease(final String resolvedTemplate, final String resolvedVersion, final List<NameValuePair> resolvedVariables) {
         // create a new release instance
         Release release = getXLReleaseServer().createRelease(resolvedTemplate, resolvedVersion, resolvedVariables);
-        deploymentListener.info(Messages.XLReleaseNotifier_createRelease(resolvedTemplate, resolvedVersion, release.getId()));
         return release;
     }
 
-    private void startRelease(final Release release, final String resolvedTemplate, final String resolvedVersion, final JenkinsReleaseListener deploymentListener) {
-        deploymentListener.info(Messages.XLReleaseNotifier_startRelease(resolvedTemplate, resolvedVersion, release.getId()));
-
+    private void startRelease(final Release release) {
         // start the release
         getXLReleaseServer().startRelease(release.getInternalId());
     }
 
-
     private XLReleaseServerConnector getXLReleaseServer() {
-        return getDescriptor().getXLReleaseServer(credential);
+        XLReleaseServerConnector connector = getDescriptor().getXLReleaseServer(credential);
+        if (connector == null)
+            throw new RuntimeException(Messages.XLReleaseNotifier_credentialNotFound(credential));
+        return connector;
     }
 
     @Override
@@ -157,12 +154,11 @@ public class XLReleaseNotifier extends Notifier {
 
         private final transient Map<String,XLReleaseServerConnector> credentialServerMap = newHashMap();
         private transient static XLReleaseServerFactory xlReleaseServerFactory = new XLReleaseServerFactory();
-        private transient String lastCredential;
+        public transient String lastCredential;
         private Release release;
 
         public XLReleaseDescriptor() {
             load();  //deserialize from xml
-            mapCredentialsByName();
         }
 
         private void mapCredentialsByName() {
@@ -211,6 +207,12 @@ public class XLReleaseNotifier extends Notifier {
             }
             return ok();
 
+        }
+
+        @Override
+        public synchronized void load() {
+            super.load();
+            mapCredentialsByName();
         }
 
         public FormValidation doCheckXLReleaseServerUrl(@QueryParameter String xlReleaseServerUrl) {
@@ -278,8 +280,9 @@ public class XLReleaseNotifier extends Notifier {
         }
 
         public ListBoxModel doFillCredentialItems() {
+
             ListBoxModel m = new ListBoxModel();
-            m.add("-- Please Select --", "");
+            m.add("-- Please Select --","");
             for (Credential c : credentials)
                 m.add(c.name, c.name);
             return m;
