@@ -136,7 +136,9 @@ public class XLReleaseNotifier extends Notifier {
 
     @Override
     public XLReleaseDescriptor getDescriptor() {
-        return (XLReleaseDescriptor) super.getDescriptor();
+        XLReleaseDescriptor descriptor = (XLReleaseDescriptor) super.getDescriptor();
+        descriptor.load();
+        return descriptor;
     }
 
     @Extension
