@@ -2,6 +2,7 @@ package com.xebialabs.xlrelease.ci.server;
 
 import com.sun.jersey.api.client.GenericType;
 import com.sun.jersey.api.client.WebResource;
+import com.xebialabs.xlrelease.ci.Messages;
 import com.xebialabs.xlrelease.ci.util.Folder;
 import com.xebialabs.xlrelease.ci.util.Release;
 import org.apache.commons.collections.CollectionUtils;
@@ -66,8 +67,10 @@ public class XLReleaseConnectorPost6Impl extends XLReleaseConnectorImpl {
                 return ((Release) o).getTitle().equals(templateTitle.substring(templateTitle.lastIndexOf('/') + 1));
             }
         });
-
-        return templates.get(0).getInternalId();
+        if (templates.size() > 0) {
+            return templates.get(0).getInternalId();
+        }
+        throw new IllegalArgumentException(Messages.XLReleaseNotifier_templateNotFound(queryString));
     }
 
     @Override
