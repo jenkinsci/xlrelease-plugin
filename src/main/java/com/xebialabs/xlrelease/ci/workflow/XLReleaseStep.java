@@ -25,10 +25,10 @@ import static com.xebialabs.xlrelease.ci.XLReleaseNotifier.XLReleaseDescriptor;
 
 public class XLReleaseStep extends AbstractStepImpl {
 
-    public String serverCredentials = null;
-    public String template = null;
-    public String version = null;
-    public String releaseTitle = null;
+    public final String serverCredentials;
+    public final String template;
+    public final String releaseTitle;
+    public String version;
     public List<NameValuePair> variables = null;
     public boolean startRelease = false;
 
@@ -40,16 +40,6 @@ public class XLReleaseStep extends AbstractStepImpl {
         this.variables = variables;
         this.startRelease = startRelease;
         this.releaseTitle = releaseTitle;
-    }
-
-    @DataBoundSetter
-    public void setServerCredentials(String serverCredentials) {
-        this.serverCredentials = serverCredentials;
-    }
-
-    @DataBoundSetter
-    public void setTemplate(String template) {
-        this.template = Util.fixEmptyAndTrim(template);
     }
 
     @DataBoundSetter
@@ -65,11 +55,6 @@ public class XLReleaseStep extends AbstractStepImpl {
     @DataBoundSetter
     public void setStartRelease(boolean startRelease) {
         this.startRelease = startRelease;
-    }
-
-    @DataBoundSetter
-    public void setReleaseTitle(String releaseTitle) {
-        this.releaseTitle = releaseTitle;
     }
 
     @Override
