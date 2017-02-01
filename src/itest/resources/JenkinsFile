@@ -1,3 +1,3 @@
 node {
-    xlRelease serverCredentials: 'admin_credential', startRelease: true, template: 'Samples & Tutorials/Welcome to XL Release!', variables: [[propertyName: 'user', propertyValue: 'Itest']], version: 'Release from JenkinsFile Itest $BUILD_TAG'
+    xlrCreateRelease serverCredentials: 'admin_credential', startRelease: true, template: 'Samples & Tutorials/Welcome to XL Release!', variables: [[propertyName: 'user', propertyValue: 'Itest']], releaseTitle: 'Release from JenkinsFile Itest $BUILD_TAG'
 }
