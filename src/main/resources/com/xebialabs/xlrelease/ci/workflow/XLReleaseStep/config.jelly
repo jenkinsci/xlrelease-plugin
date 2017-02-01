@@ -9,7 +9,7 @@
 
     <f:validateButton title="${%Validate template}" with="serverCredentials,template" method="validateTemplate" />
 
-    <f:entry title="${%Name}" field="version" help="/plugin/xlrelease-plugin/help-name.html">
+    <f:entry title="${%Release title}" field="releaseTitle" help="/plugin/xlrelease-plugin/help-name.html">
             <f:textbox default="Release for $BUILD_TAG"/>
         </f:entry>
 

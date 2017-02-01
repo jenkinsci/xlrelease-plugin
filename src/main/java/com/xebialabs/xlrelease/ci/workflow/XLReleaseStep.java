@@ -28,16 +28,18 @@ public class XLReleaseStep extends AbstractStepImpl {
     public String serverCredentials = null;
     public String template = null;
     public String version = null;
+    public String releaseTitle = null;
     public List<NameValuePair> variables = null;
     public boolean startRelease = false;
 
     @DataBoundConstructor
-    public XLReleaseStep(String serverCredentials, String template, String version, List<NameValuePair> variables, boolean startRelease) {
+    public XLReleaseStep(String serverCredentials, String template, String version, List<NameValuePair> variables, boolean startRelease, String releaseTitle) {
         this.serverCredentials = serverCredentials;
         this.template = template;
         this.version = version;
         this.variables = variables;
         this.startRelease = startRelease;
+        this.releaseTitle = releaseTitle;
     }
 
     @DataBoundSetter
@@ -63,6 +65,11 @@ public class XLReleaseStep extends AbstractStepImpl {
     @DataBoundSetter
     public void setStartRelease(boolean startRelease) {
         this.startRelease = startRelease;
+    }
+
+    @DataBoundSetter
+    public void setReleaseTitle(String releaseTitle) {
+        this.releaseTitle = releaseTitle;
     }
 
     @Override
@@ -95,8 +102,9 @@ public class XLReleaseStep extends AbstractStepImpl {
         }
 
         public FormValidation doValidateTemplate(@QueryParameter String serverCredentials, @QueryParameter final String template) {
-           return getXLReleaseDescriptor().doValidateTemplate(serverCredentials,template);
+            return getXLReleaseDescriptor().doValidateTemplate(serverCredentials, template);
         }
+
         public ListBoxModel doFillServerCredentialsItems() {
             return getXLReleaseDescriptor().doFillCredentialItems();
         }
@@ -134,8 +142,8 @@ public class XLReleaseStep extends AbstractStepImpl {
 
         @Override
         protected Void run() throws Exception {
-            XLReleaseNotifier releaseNotifier = new XLReleaseNotifier(step.serverCredentials, step.template, step.version, step.variables, step.startRelease);
-            releaseNotifier.executeRelease(envVars,listener);
+            XLReleaseNotifier releaseNotifier = new XLReleaseNotifier(step.serverCredentials, step.template, (step.releaseTitle != null) ? step.releaseTitle : step.version, step.variables, step.startRelease);
+            releaseNotifier.executeRelease(envVars, listener);
             return null;
         }
     }
