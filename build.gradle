@@ -196,6 +196,8 @@ task itest(type: Test) {
     classpath = project.sourceSets.itest.runtimeClasspath
 }
 
+itest.dependsOn test
+
 if (project.hasProperty('xlReleaseIntegration.host')) {
     def host = project.property('xlReleaseIntegration.host')
     def username = project.property('xlReleaseIntegration.username')

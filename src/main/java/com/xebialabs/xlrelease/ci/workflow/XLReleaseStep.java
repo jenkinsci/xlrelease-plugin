@@ -25,29 +25,21 @@ import static com.xebialabs.xlrelease.ci.XLReleaseNotifier.XLReleaseDescriptor;
 
 public class XLReleaseStep extends AbstractStepImpl {
 
-    public String serverCredentials = null;
-    public String template = null;
-    public String version = null;
+    public final String serverCredentials;
+    public final String template;
+    public final String releaseTitle;
+    public String version;
     public List<NameValuePair> variables = null;
     public boolean startRelease = false;
 
     @DataBoundConstructor
-    public XLReleaseStep(String serverCredentials, String template, String version, List<NameValuePair> variables, boolean startRelease) {
+    public XLReleaseStep(String serverCredentials, String template, String version, List<NameValuePair> variables, boolean startRelease, String releaseTitle) {
         this.serverCredentials = serverCredentials;
         this.template = template;
         this.version = version;
         this.variables = variables;
         this.startRelease = startRelease;
-    }
-
-    @DataBoundSetter
-    public void setServerCredentials(String serverCredentials) {
-        this.serverCredentials = serverCredentials;
-    }
-
-    @DataBoundSetter
-    public void setTemplate(String template) {
-        this.template = Util.fixEmptyAndTrim(template);
+        this.releaseTitle = releaseTitle;
     }
 
     @DataBoundSetter
@@ -95,8 +87,9 @@ public class XLReleaseStep extends AbstractStepImpl {
         }
 
         public FormValidation doValidateTemplate(@QueryParameter String serverCredentials, @QueryParameter final String template) {
-           return getXLReleaseDescriptor().doValidateTemplate(serverCredentials,template);
+            return getXLReleaseDescriptor().doValidateTemplate(serverCredentials, template);
         }
+
         public ListBoxModel doFillServerCredentialsItems() {
             return getXLReleaseDescriptor().doFillCredentialItems();
         }
@@ -134,8 +127,8 @@ public class XLReleaseStep extends AbstractStepImpl {
 
         @Override
         protected Void run() throws Exception {
-            XLReleaseNotifier releaseNotifier = new XLReleaseNotifier(step.serverCredentials, step.template, step.version, step.variables, step.startRelease);
-            releaseNotifier.executeRelease(envVars,listener);
+            XLReleaseNotifier releaseNotifier = new XLReleaseNotifier(step.serverCredentials, step.template, (step.releaseTitle != null) ? step.releaseTitle : step.version, step.variables, step.startRelease);
+            releaseNotifier.executeRelease(envVars, listener);
             return null;
         }
     }
