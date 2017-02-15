@@ -1,8 +1,10 @@
 package com.xebialabs.xlrelease.ci.workflow;
 
 import com.google.inject.Inject;
+import com.xebialabs.xlrelease.ci.Messages;
 import com.xebialabs.xlrelease.ci.NameValuePair;
 import com.xebialabs.xlrelease.ci.XLReleaseNotifier;
+import com.xebialabs.xlrelease.ci.util.JenkinsReleaseListener;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.Util;
@@ -10,6 +12,7 @@ import hudson.model.AutoCompletionCandidates;
 import hudson.model.TaskListener;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
+import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.workflow.steps.AbstractStepDescriptorImpl;
 import org.jenkinsci.plugins.workflow.steps.AbstractStepImpl;
 import org.jenkinsci.plugins.workflow.steps.AbstractSynchronousNonBlockingStepExecution;
@@ -28,6 +31,7 @@ public class XLReleaseStep extends AbstractStepImpl {
     public final String serverCredentials;
     public final String template;
     public final String releaseTitle;
+    @Deprecated
     public String version;
     public List<NameValuePair> variables = null;
     public boolean startRelease = false;
@@ -127,6 +131,10 @@ public class XLReleaseStep extends AbstractStepImpl {
 
         @Override
         protected Void run() throws Exception {
+            if (StringUtils.isNotEmpty(step.version)) {
+                JenkinsReleaseListener deploymentListener = new JenkinsReleaseListener(listener);
+                deploymentListener.info(Messages._XLReleaseStep_versionDeprecated());
+            }
             XLReleaseNotifier releaseNotifier = new XLReleaseNotifier(step.serverCredentials, step.template, (step.releaseTitle != null) ? step.releaseTitle : step.version, step.variables, step.startRelease);
             releaseNotifier.executeRelease(envVars, listener);
             return null;
