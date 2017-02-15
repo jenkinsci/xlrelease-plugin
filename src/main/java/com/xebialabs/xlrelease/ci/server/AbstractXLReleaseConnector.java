@@ -1,15 +1,5 @@
 package com.xebialabs.xlrelease.ci.server;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import javax.ws.rs.core.MediaType;
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.Predicate;
-import org.codehaus.jackson.jaxrs.JacksonJaxbJsonProvider;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.GenericType;
@@ -18,13 +8,26 @@ import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import com.sun.jersey.api.json.JSONConfiguration;
-
 import com.xebialabs.xlrelease.ci.NameValuePair;
 import com.xebialabs.xlrelease.ci.util.ObjectMapperProvider;
 import com.xebialabs.xlrelease.ci.util.Release;
 import com.xebialabs.xlrelease.ci.util.ServerInfo;
 import com.xebialabs.xlrelease.ci.util.TemplateVariable;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.Predicate;
+import org.codehaus.jackson.jaxrs.JacksonJaxbJsonProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import javax.ws.rs.core.MediaType;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static com.xebialabs.xlrelease.ci.NameValuePair.VARIABLE_PREFIX;
+import static com.xebialabs.xlrelease.ci.NameValuePair.VARIABLE_SUFFIX;
+import static com.xebialabs.xlrelease.ci.util.TemplateVariable.isVariable;
 import static javax.ws.rs.core.Response.Status.Family.SUCCESSFUL;
 
 public abstract class AbstractXLReleaseConnector implements XLReleaseServerConnector {
@@ -168,9 +171,16 @@ public abstract class AbstractXLReleaseConnector implements XLReleaseServerConne
     protected Map<String, String> convertToVariablesMap(final List<NameValuePair> variables) {
         Map<String, String> variablesMap = new HashMap<String, String>();
         for (NameValuePair variable : variables) {
-            variablesMap.put(variable.getPropertyName(), variable.propertyValue);
+            variablesMap.put(getVariableName(variable.getPropertyName()), variable.propertyValue);
         }
         return variablesMap;
+    }
+
+    private String getVariableName (String variable) {
+        if (!isVariable(variable)) {
+            return VARIABLE_PREFIX + variable + VARIABLE_SUFFIX;
+        }
+        return variable;
     }
 
     @Override
