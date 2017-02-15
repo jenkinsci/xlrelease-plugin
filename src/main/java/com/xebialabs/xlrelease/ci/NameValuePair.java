@@ -59,10 +59,6 @@ public class NameValuePair extends AbstractDescribableImpl<NameValuePair> {
     }
 
     public String getPropertyName() {
-
-        if (!isVariable(propertyName)) {
-            return VARIABLE_PREFIX + propertyName + VARIABLE_SUFFIX;
-        }
         return propertyName;
     }
 
