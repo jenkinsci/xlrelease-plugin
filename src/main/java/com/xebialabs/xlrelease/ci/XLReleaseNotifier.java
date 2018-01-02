@@ -29,7 +29,6 @@ import com.cloudbees.plugins.credentials.domains.SchemeRequirement;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import com.sun.jersey.api.client.UniformInterfaceException;
-import com.xebialabs.xlrelease.ci.server.AbstractXLReleaseConnector;
 import com.xebialabs.xlrelease.ci.server.XLReleaseServerConnector;
 import com.xebialabs.xlrelease.ci.server.XLReleaseServerConnectorFactory;
 import com.xebialabs.xlrelease.ci.server.XLReleaseServerFactory;
@@ -362,17 +361,21 @@ public class XLReleaseNotifier extends Notifier {
         }
 
 
-        public Map<String, String> getVariablesOf(final String credential, final String template) {
-            release = getTemplate(credential, null, template);
+        public Map<String, String> getVariablesOf(final String credential, final Credential overridingCredential, final String template) {
+            release = getTemplate(credential, overridingCredential, template);
             if (release == null) {
                 return Collections.emptyMap();
             }
             return release.getVariableValues();
         }
 
-        public int getNumberOfVariables(@QueryParameter String credential, @QueryParameter String template) {
+        public int getNumberOfVariables(@QueryParameter String credential, @QueryParameter boolean overridingCredential, @QueryParameter String username
+                , @QueryParameter String password, @QueryParameter boolean useGlobalCredential, @QueryParameter String credentialsId, @QueryParameter String template) {
             if (credential != null) {
-                Map<String, String> variables = getVariablesOf(credential,template);
+                Credential overridingCredentialTemp=null;
+                if(overridingCredential)
+                    overridingCredentialTemp=new Credential(credential, username, Secret.fromString(password), credentialsId, useGlobalCredential, null);
+                Map<String, String> variables = getVariablesOf(credential, overridingCredentialTemp, template);
                 if (variables != null) {
                     return variables.size();
                 }
