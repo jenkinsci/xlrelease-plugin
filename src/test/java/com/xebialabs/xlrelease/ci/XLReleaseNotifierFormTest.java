@@ -54,7 +54,7 @@ public class XLReleaseNotifierFormTest {
     @LocalData
     public void testXLReleaseForm() throws Exception {
         FreeStyleProject p = j.createFreeStyleProject();
-        XLReleaseNotifier before = new XLReleaseNotifier("admin", "atemplate", "1.0", null, false);
+        XLReleaseNotifier before = new XLReleaseNotifier("admin", "atemplate", "1.0", null, false, null);
         p.getPublishersList().add(before);
 
         j.submit(j.createWebClient().getPage(p, "configure").getFormByName("config"));
