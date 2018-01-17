@@ -90,8 +90,9 @@ public class XLReleaseStep extends AbstractStepImpl {
             return getXLReleaseDescriptor().doAutoCompleteTemplate(value);
         }
 
-        public FormValidation doValidateTemplate(@QueryParameter String serverCredentials, @QueryParameter final String template) {
-            return getXLReleaseDescriptor().doValidateTemplate(serverCredentials, template);
+        public FormValidation doValidateTemplate(@QueryParameter String serverCredentials,@QueryParameter boolean overridingCredential, @QueryParameter String username
+                , @QueryParameter String password, @QueryParameter boolean useGlobalCredential, @QueryParameter String credentialsId, @QueryParameter final String template) {
+            return getXLReleaseDescriptor().doValidateTemplate(serverCredentials, overridingCredential,username,password,useGlobalCredential,credentialsId, template);
         }
 
         public ListBoxModel doFillServerCredentialsItems() {
@@ -100,15 +101,16 @@ public class XLReleaseStep extends AbstractStepImpl {
 
 
         public Map<String, String> getVariablesOf(final String credential, final String template) {
-            return getXLReleaseDescriptor().getVariablesOf(credential, template);
+            return getXLReleaseDescriptor().getVariablesOf(credential, null, template);
         }
 
         public FormValidation doCheckServerCredentials(@QueryParameter String serverCredentials) {
             return getXLReleaseDescriptor().doCheckCredential(serverCredentials);
         }
 
-        public int getNumberOfVariables(@QueryParameter String serverCredentials, @QueryParameter String template) {
-            return getXLReleaseDescriptor().getNumberOfVariables(serverCredentials, template);
+        public int getNumberOfVariables(@QueryParameter String serverCredentials,@QueryParameter boolean overridingCredential, @QueryParameter String username
+                , @QueryParameter String password, @QueryParameter boolean useGlobalCredential, @QueryParameter String credentialsId, @QueryParameter String template) {
+            return getXLReleaseDescriptor().getNumberOfVariables(serverCredentials, overridingCredential, username, password, useGlobalCredential, credentialsId ,template);
         }
 
         private XLReleaseDescriptor getXLReleaseDescriptor() {
@@ -135,7 +137,7 @@ public class XLReleaseStep extends AbstractStepImpl {
                 JenkinsReleaseListener deploymentListener = new JenkinsReleaseListener(listener);
                 deploymentListener.info(Messages._XLReleaseStep_versionDeprecated());
             }
-            XLReleaseNotifier releaseNotifier = new XLReleaseNotifier(step.serverCredentials, step.template, (step.releaseTitle != null) ? step.releaseTitle : step.version, step.variables, step.startRelease);
+            XLReleaseNotifier releaseNotifier = new XLReleaseNotifier(step.serverCredentials, step.template, (step.releaseTitle != null) ? step.releaseTitle : step.version, step.variables, step.startRelease,null);
             releaseNotifier.executeRelease(envVars, listener);
             return null;
         }
