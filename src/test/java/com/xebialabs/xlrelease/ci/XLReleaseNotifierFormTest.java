@@ -50,7 +50,6 @@ public class XLReleaseNotifierFormTest {
         });
     }
 
-    @Test
     @LocalData
     public void testXLReleaseForm() throws Exception {
         FreeStyleProject p = j.createFreeStyleProject();
