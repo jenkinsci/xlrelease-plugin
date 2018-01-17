@@ -27,7 +27,7 @@
         </f:optionalBlock>
     </f:block>
 
-    <f:validateButton title="${%Reload templates}" with="credential,overridingCredential,username,password,useGlobalCredential,credentialsId" method="reloadTemplates" />
+    <f:validateButton title="${%Refresh templates}" with="credential,overridingCredential,username,password,useGlobalCredential,credentialsId" method="reloadTemplates" />
 
     <f:entry title="${%Template}" field="template" help="/plugin/xlrelease-plugin/help-template.html">
         <f:textbox />
