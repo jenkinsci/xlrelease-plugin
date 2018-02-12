@@ -37,17 +37,17 @@ public class XLReleaseStep extends AbstractStepImpl {
     public String version;
     public List<NameValuePair> variables = null;
     public boolean startRelease = false;
-    public final String credentialId;
+    public final String overrideCredentialId;
 
     @DataBoundConstructor
-    public XLReleaseStep(String serverCredentials, String template, String version, List<NameValuePair> variables, boolean startRelease, String releaseTitle, String credentialId) {
+    public XLReleaseStep(String serverCredentials, String template, String version, List<NameValuePair> variables, boolean startRelease, String releaseTitle, String overrideCredentialId) {
         this.serverCredentials = serverCredentials;
         this.template = template;
         this.version = version;
         this.variables = variables;
         this.startRelease = startRelease;
         this.releaseTitle = releaseTitle;
-        this.credentialId = credentialId;
+        this.overrideCredentialId = overrideCredentialId;
     }
 
     @DataBoundSetter
@@ -147,8 +147,8 @@ public class XLReleaseStep extends AbstractStepImpl {
         }
 
         private Credential getOverridingCredential() {
-            if (StringUtils.isNotEmpty(step.credentialId)) {
-                Credential credential =  new Credential("Overriding", "", Secret.fromString(""), step.credentialId, true, null);
+            if (StringUtils.isNotEmpty(step.overrideCredentialId)) {
+                Credential credential =  new Credential("Overriding", "", Secret.fromString(""), step.overrideCredentialId, true, null);
                 return  credential;
             }
             return null;
