@@ -1,6 +1,7 @@
 package com.xebialabs.xlrelease.ci.workflow;
 
 import com.google.inject.Inject;
+import com.xebialabs.xlrelease.ci.Credential;
 import com.xebialabs.xlrelease.ci.Messages;
 import com.xebialabs.xlrelease.ci.NameValuePair;
 import com.xebialabs.xlrelease.ci.XLReleaseNotifier;
@@ -12,6 +13,7 @@ import hudson.model.AutoCompletionCandidates;
 import hudson.model.TaskListener;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
+import hudson.util.Secret;
 import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.workflow.steps.AbstractStepDescriptorImpl;
 import org.jenkinsci.plugins.workflow.steps.AbstractStepImpl;
@@ -35,15 +37,17 @@ public class XLReleaseStep extends AbstractStepImpl {
     public String version;
     public List<NameValuePair> variables = null;
     public boolean startRelease = false;
+    public final String overrideCredentialId;
 
     @DataBoundConstructor
-    public XLReleaseStep(String serverCredentials, String template, String version, List<NameValuePair> variables, boolean startRelease, String releaseTitle) {
+    public XLReleaseStep(String serverCredentials, String template, String version, List<NameValuePair> variables, boolean startRelease, String releaseTitle, String overrideCredentialId) {
         this.serverCredentials = serverCredentials;
         this.template = template;
         this.version = version;
         this.variables = variables;
         this.startRelease = startRelease;
         this.releaseTitle = releaseTitle;
+        this.overrideCredentialId = overrideCredentialId;
     }
 
     @DataBoundSetter
@@ -137,8 +141,16 @@ public class XLReleaseStep extends AbstractStepImpl {
                 JenkinsReleaseListener deploymentListener = new JenkinsReleaseListener(listener);
                 deploymentListener.info(Messages._XLReleaseStep_versionDeprecated());
             }
-            XLReleaseNotifier releaseNotifier = new XLReleaseNotifier(step.serverCredentials, step.template, (step.releaseTitle != null) ? step.releaseTitle : step.version, step.variables, step.startRelease,null);
+            XLReleaseNotifier releaseNotifier = new XLReleaseNotifier(step.serverCredentials, step.template, (step.releaseTitle != null) ? step.releaseTitle : step.version, step.variables, step.startRelease, getOverridingCredential());
             releaseNotifier.executeRelease(envVars, listener);
+            return null;
+        }
+
+        private Credential getOverridingCredential() {
+            if (StringUtils.isNotEmpty(step.overrideCredentialId)) {
+                Credential credential =  new Credential("Overriding", "", Secret.fromString(""), step.overrideCredentialId, true, null);
+                return  credential;
+            }
             return null;
         }
     }
