@@ -50,8 +50,10 @@ import org.jvnet.hudson.test.recipes.LocalData;
 import org.kohsuke.stapler.StaplerRequest;
 
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.UriBuilder;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
@@ -147,7 +149,7 @@ public class XLReleaseNotifierFormITest {
 
         GenericType<Release> genericType = new GenericType<Release>() {};
 
-        int maxNumberOfRetry = 30;
+        int maxNumberOfRetry = 45;
         while (maxNumberOfRetry-- > 0) {
             try {
                 Release release = service.path("api").path("v1").path("releases").path(releaseId).accept(MediaType.APPLICATION_JSON).get(genericType);
@@ -162,12 +164,12 @@ public class XLReleaseNotifierFormITest {
             Thread.sleep(1000);
         }
 
-        fail("Release " + releaseId + " was not started within 30 seconds");
+        fail("Release " + releaseId + " was not started within 45 seconds");
     }
 
     private String findReleaseId(List<String> log) {
         for (String line : log) {
-            Matcher matcher = Pattern.compile(".*\"(Applications/.*Release\\d+).*").matcher(line);
+            Matcher matcher = Pattern.compile(".*\"(Applications/.*Release[^/-]+).*\"").matcher(line);
             if (matcher.matches()) {
                 return matcher.group(1);
             }
