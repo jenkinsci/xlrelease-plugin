@@ -39,6 +39,9 @@ import hudson.model.FreeStyleProject;
 import hudson.model.Result;
 import hudson.util.Secret;
 import net.sf.json.JSONObject;
+
+import org.apache.commons.io.Charsets;
+import org.apache.commons.io.IOUtils;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
@@ -54,6 +57,7 @@ import javax.ws.rs.core.UriBuilder;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URI;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
@@ -191,13 +195,7 @@ public class XLReleaseNotifierFormITest {
     }
 
     private String getJenkinsFileScript () throws IOException {
-        String jenkinsFile = "";
-        try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-
-            Files.copy(Paths.get(getClass().getClassLoader().getResource("JenkinsFile").getFile()), outputStream);
-            jenkinsFile = new String(outputStream.toByteArray());
-        }
-        return jenkinsFile;
+        return IOUtils.toString(getClass().getClassLoader().getResourceAsStream("JenkinsFile"), Charsets.UTF_8);
     }
 
 }
