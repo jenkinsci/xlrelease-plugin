@@ -207,6 +207,16 @@ if (project.hasProperty('xlReleaseIntegration.host')) {
     ])
 }
 
+import org.apache.tools.ant.filters.ReplaceTokens
+
+processItestResources {
+    filesMatching('**/com.xebialabs.xlrelease.ci.XLReleaseNotifier.xml') {
+        filter ReplaceTokens, tokens: [
+            'xlReleaseServerUrl': project.property('xlReleaseIntegration.host')
+        ]
+    }
+}
+
 release {
     buildTasks = ['publish']
     tagTemplate = 'xlrelease-plugin-$version'
