@@ -37,22 +37,26 @@ public class XLReleaseStep extends AbstractStepImpl {
     public String version;
     public List<NameValuePair> variables = null;
     public boolean startRelease = false;
-    public final String overrideCredentialId;
+    public String overrideCredentialId;
 
     @DataBoundConstructor
-    public XLReleaseStep(String serverCredentials, String template, String version, List<NameValuePair> variables, boolean startRelease, String releaseTitle, String overrideCredentialId) {
+    public XLReleaseStep(String serverCredentials, String template, String version, List<NameValuePair> variables, boolean startRelease, String releaseTitle) {
         this.serverCredentials = serverCredentials;
         this.template = template;
         this.version = version;
         this.variables = variables;
         this.startRelease = startRelease;
         this.releaseTitle = releaseTitle;
-        this.overrideCredentialId = overrideCredentialId;
     }
 
     @DataBoundSetter
     public void setVersion(String version) {
         this.version = Util.fixEmptyAndTrim(version);
+    }
+
+    @DataBoundSetter
+    public void setOverrideCredentialId(String overrideCredentialId) {
+        this.overrideCredentialId = overrideCredentialId;
     }
 
     @DataBoundSetter
