@@ -226,8 +226,8 @@ release {
 }
 
 task checkJavaVersion << {
-    if(JavaVersion.current() != JavaVersion.VERSION_1_7) {
-        throw new GradleException("This build must be run with java ${JavaVersion.VERSION_1_7}")
+    if(JavaVersion.current() < JavaVersion.VERSION_1_7) {
+        throw new GradleException("This build must be run with at least java ${JavaVersion.VERSION_1_7}")
     }
 }
 
