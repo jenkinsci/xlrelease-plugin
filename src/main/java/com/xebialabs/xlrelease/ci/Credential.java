@@ -80,28 +80,8 @@ public class Credential extends AbstractDescribableImpl<Credential> {
         this.useGlobalCredential = useGlobalCredential;
     }
 
-    public String getKey() {
-        return username + ":" + password.getPlainText() + "@" + name + ":" + credentialsId + ":";
-    }
-
     public String getName() {
         return name;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public Secret getPassword() {
-        return password;
-    }
-
-    public String getCredentialsId() {
-        return credentialsId;
-    }
-
-    public SecondaryServerInfo getSecondaryServerInfo() {
-        return secondaryServerInfo;
     }
 
     public String getSecondaryServerUrl() {
@@ -137,10 +117,6 @@ public class Credential extends AbstractDescribableImpl<Credential> {
     }
 
     public boolean showGolbalCredentials() {
-        return useGlobalCredential;
-    }
-
-    public boolean isUseGlobalCredential() {
         return useGlobalCredential;
     }
 
