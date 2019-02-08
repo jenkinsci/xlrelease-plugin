@@ -45,15 +45,22 @@ public abstract class AbstractXLReleaseConnector implements XLReleaseServerConne
         this.password = password;
         this.proxyUrl = proxyUrl;
         this.serverUrl = serverUrl;
+        System.out.println("CONNECTOR: " + serverUrl + ", " + proxyUrl + ", " + username + ", " + password);
     }
 
     @Override
     public String getVersion() {
+        System.out.println("getVersion()");
         WebResource service = buildWebResource();
+        System.out.println(service);
         ServerInfo serverInfo = service.path("server")
                 .path("info")
                 .accept(MediaType.APPLICATION_XML_TYPE)
                 .get(ServerInfo.class);
+        System.out.println("###################");
+        System.out.println(serverInfo);
+        System.out.println(serverUrl);
+        System.out.println(serverInfo.getVersion());
         return serverInfo.getVersion();
     }
 

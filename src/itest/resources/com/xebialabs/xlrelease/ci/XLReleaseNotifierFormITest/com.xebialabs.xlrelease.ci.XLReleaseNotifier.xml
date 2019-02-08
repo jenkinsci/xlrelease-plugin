@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <com.xebialabs.xlrelease.ci.XLReleaseNotifier_-XLReleaseDescriptor plugin="xlrelease-plugin@6.0.1-SNAPSHOT">
-  <xlReleaseServerUrl>http://localhost:5516</xlReleaseServerUrl>
+  <xlReleaseServerUrl>@xlReleaseServerUrl@</xlReleaseServerUrl>
   <xlReleaseClientProxyUrl></xlReleaseClientProxyUrl>
   <credentials>
     <com.xebialabs.xlrelease.ci.Credential>

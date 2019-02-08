@@ -25,13 +25,15 @@ Debugging is configured with GRADLE_OPTIONS env variable.
 
 Additionally to unit tests there are integration tests which you can run by following command:
     
-    ./gradlew itest
+    ./gradlew clean itest
 
 Integration tests require that you have a running XL Release server at http://localhost:5516 with standard credentials. You can override the location and credentials using Gradle properties (`gradle.properties` file or command-line):
 
     xlReleaseIntegration.host=https://my.xl-release/xl-release-context
     xlReleaseIntegration.username=user
     xlReleaseIntegration.password=password
+
+NOTE: if you change one or more of those parameters it is mandatory to clean before running the tests again.
 
 ### Development and Gradle ###
 

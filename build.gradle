@@ -29,6 +29,7 @@ apply plugin: 'eclipse'
 apply plugin: 'idea'
 apply plugin: 'java'
 apply plugin: 'jpi'
+apply plugin: 'net.researchgate.release'
 
 build.dependsOn jpi
 
@@ -66,6 +67,7 @@ buildscript {
     }
     dependencies {
         classpath 'org.jenkins-ci.tools:gradle-jpi-plugin:0.18.0'
+        classpath 'net.researchgate:gradle-release:2.3.4'
     }
 }
 
@@ -208,3 +210,29 @@ if (project.hasProperty('xlReleaseIntegration.host')) {
         "xlReleaseIntegration.password" : "$password"
     ])
 }
+
+import org.apache.tools.ant.filters.ReplaceTokens
+
+processItestResources {
+    filesMatching('**/com.xebialabs.xlrelease.ci.XLReleaseNotifier.xml') {
+        filter ReplaceTokens, tokens: [
+            'xlReleaseServerUrl': project.property('xlReleaseIntegration.host')
+        ]
+    }
+}
+
+release {
+    buildTasks = ['publish']
+    tagTemplate = 'xlrelease-plugin-$version'
+    preTagCommitMessage = 'Released Jenkins XL Release plugin '
+    tagCommitMessage = 'Tag for xlrelease-plugin-$version'
+    newVersionCommitMessage = 'Set development version to '
+}
+
+task checkJavaVersion << {
+    if(JavaVersion.current() < JavaVersion.VERSION_1_7) {
+        throw new GradleException("This build must be run with at least java ${JavaVersion.VERSION_1_7}")
+    }
+}
+
+tasks.checkJavaVersion.execute()
