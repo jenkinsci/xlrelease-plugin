@@ -27,7 +27,6 @@ package com.xebialabs.xlrelease.ci;
 import java.util.Map;
 
 import com.xebialabs.xlrelease.ci.util.TemplateVariable;
-import hudson.util.Secret;
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
@@ -71,14 +70,10 @@ public class NameValuePair extends AbstractDescribableImpl<NameValuePair> {
         }
 
         public ListBoxModel doFillPropertyNameItems(@QueryParameter @RelativePath(value = "..") String credential, @QueryParameter @RelativePath(value = "..") String serverCredentials,
-                @QueryParameter @RelativePath(value = "..") String template,@QueryParameter @RelativePath(value = "..") boolean overridingCredential, @QueryParameter @RelativePath(value = "../overridingCredential") String username
-                , @QueryParameter @RelativePath(value = "../overridingCredential") String password, @QueryParameter @RelativePath(value = "../overridingCredential") boolean useGlobalCredential, @QueryParameter @RelativePath(value = "../overridingCredential") String credentialsId) {
+                @QueryParameter @RelativePath(value = "..") String template) {
             if (StringUtils.isEmpty(credential))
                 credential = serverCredentials;
-            Credential overridingCredentialTemp=null;
-            if(overridingCredential)
-                overridingCredentialTemp=new Credential(credential, username, Secret.fromString(password), credentialsId, useGlobalCredential, null);
-            Map<String, String> variables = getXLReleaseDescriptor().getVariablesOf(credential, overridingCredentialTemp, template);
+            Map<String, String> variables = getXLReleaseDescriptor().getVariablesOf(credential, template);
             if (variables == null) {
                 return emptyModel();
             }

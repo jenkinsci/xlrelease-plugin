@@ -27,12 +27,9 @@ package com.xebialabs.xlrelease.ci.server;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
 import java.util.List;
-
-import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
-import com.xebialabs.xlrelease.ci.Credential;
-import hudson.util.Secret;
+
 
 
 public class XLReleaseServerFactory {
@@ -43,19 +40,7 @@ public class XLReleaseServerFactory {
     }
 
     public XLReleaseServerConnector newInstance(String serverUrl, String proxyUrl, String username, String password) {
-        return newInstance(serverUrl,proxyUrl,new Credential(username, username, Secret.fromString(password), null, false, null));
-    }
-
-    public XLReleaseServerConnector newInstance(String serverUrl, String proxyUrl, Credential credential) {
-        String userName = credential.getUsername();
-        String password = credential.getPassword().getPlainText();
-        if (credential.isUseGlobalCredential()) {
-            StandardUsernamePasswordCredentials cred =  Credential.lookupSystemCredentials(credential.getCredentialsId());
-            userName =  cred.getUsername();
-            password = cred.getPassword().getPlainText();
-        }
-
-        XLReleaseServerConnectorFacade server = new XLReleaseServerConnectorFacade(serverUrl, proxyUrl, userName, password);
+        XLReleaseServerConnectorFacade server = new XLReleaseServerConnectorFacade(serverUrl, proxyUrl, username, password);
         return newProxy(XLReleaseServerConnector.class, new PluginFirstClassloaderInvocationHandler(server));
     }
 

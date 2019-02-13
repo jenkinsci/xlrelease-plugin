@@ -65,6 +65,14 @@ public class XLReleaseConnectorImpl extends AbstractXLReleaseConnector {
                     acceptedTypes.add("xlrelease.StringVariable");
                     acceptedTypes.add("xlrelease.XLDeployPackageVariable");
                     acceptedTypes.add("xlrelease.XLDeployEnvironmentVariable");
+                    acceptedTypes.add("xlrelease.BooleanVariable");
+                    acceptedTypes.add("xlrelease.DateVariable");
+                    acceptedTypes.add("xlrelease.IntegerVariable");
+                    acceptedTypes.add("xlrelease.ListStringVariable");
+                    acceptedTypes.add("xlrelease.MapStringStringVariable");
+                    acceptedTypes.add("xlrelease.PasswordStringVariable");
+                    acceptedTypes.add("xlrelease.SetStringVariable");
+                    acceptedTypes.add("xlrelease.ListOfStringValueProviderConfiguration.java");
                     return acceptedTypes.contains(((TemplateVariable) o).getType());
                 }
                 return false;

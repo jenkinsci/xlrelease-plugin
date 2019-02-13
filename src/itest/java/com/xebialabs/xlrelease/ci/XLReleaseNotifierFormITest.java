@@ -108,7 +108,7 @@ public class XLReleaseNotifierFormITest {
     public void shouldShowListOfTemplatesWithSavedAsPreSelected() throws Exception {
         FreeStyleProject project = jenkins.createFreeStyleProject();
         XLReleaseNotifier before = reconfigureWithEnvSettings(
-                new XLReleaseNotifier(ADMIN_CREDENTIAL, TEMPLATE_NAME, RELEASE_TITLE, null, true, null));
+                new XLReleaseNotifier(ADMIN_CREDENTIAL, TEMPLATE_NAME, RELEASE_TITLE, null, true));
         project.getPublishersList().add(before);
 
         HtmlForm xlrForm = jenkins.createWebClient().getPage(project, "configure").getFormByName("config");
@@ -125,7 +125,7 @@ public class XLReleaseNotifierFormITest {
         FreeStyleProject project = jenkins.createFreeStyleProject();
         XLReleaseNotifier before = reconfigureWithEnvSettings(new XLReleaseNotifier(
                 ADMIN_CREDENTIAL, TEMPLATE_NAME, RELEASE_TITLE,
-                newArrayList(new NameValuePair(USER_VARIABLE, "jenkins")), true, null));
+                newArrayList(new NameValuePair(USER_VARIABLE, "jenkins")), true));
         project.getPublishersList().add(before);
         FreeStyleBuild freeStyleBuild = jenkins.buildAndAssertSuccess(project);
         String releaseId = findReleaseId(freeStyleBuild.getLog(20));
