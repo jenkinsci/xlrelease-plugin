@@ -59,7 +59,6 @@ public class XLReleaseServerFactory {
         return newProxy(XLReleaseServerConnector.class, new PluginFirstClassloaderInvocationHandler(server));
     }
 
-
     public static String getNameFromId(String id) {
         String[] nameParts = id.split("/");
         return nameParts[nameParts.length - 1];

@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<com.xebialabs.xlrelease.ci.XLReleaseNotifier_-XLReleaseDescriptor plugin="xlrelease-plugin@4.8.1-SNAPSHOT">
+  <xlReleaseServerUrl>http://localhost:5516</xlReleaseServerUrl>
+  <xlReleaseClientProxyUrl></xlReleaseClientProxyUrl>
+  <credentials>
+    <com.xebialabs.xlrelease.ci.Credential>
+      <name>admin</name>
+      <username>admin</username>
+    </com.xebialabs.xlrelease.ci.Credential>
+  </credentials>
+</com.xebialabs.xlrelease.ci.XLReleaseNotifier_-XLReleaseDescriptor>

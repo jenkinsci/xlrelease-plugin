@@ -9,6 +9,7 @@ import com.xebialabs.xlrelease.ci.util.JenkinsReleaseListener;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.Util;
+import hudson.model.AbstractProject;
 import hudson.model.AutoCompletionCandidates;
 import hudson.model.TaskListener;
 import hudson.util.FormValidation;
@@ -19,6 +20,8 @@ import org.jenkinsci.plugins.workflow.steps.AbstractStepDescriptorImpl;
 import org.jenkinsci.plugins.workflow.steps.AbstractStepImpl;
 import org.jenkinsci.plugins.workflow.steps.AbstractSynchronousNonBlockingStepExecution;
 import org.jenkinsci.plugins.workflow.steps.StepContextParameter;
+
+import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
@@ -98,9 +101,8 @@ public class XLReleaseStep extends AbstractStepImpl {
             return getXLReleaseDescriptor().doAutoCompleteTemplate(value);
         }
 
-        public FormValidation doValidateTemplate(@QueryParameter String serverCredentials,@QueryParameter boolean overridingCredential, @QueryParameter String username
-                , @QueryParameter String password, @QueryParameter boolean useGlobalCredential, @QueryParameter String credentialsId, @QueryParameter final String template) {
-            return getXLReleaseDescriptor().doValidateTemplate(serverCredentials, overridingCredential,username,password,useGlobalCredential,credentialsId, template);
+        public FormValidation doValidateTemplate(@QueryParameter String serverCredentials, @QueryParameter boolean overridingCredential, @QueryParameter final String template, @AncestorInPath AbstractProject project) {
+            return getXLReleaseDescriptor().doValidateTemplate(serverCredentials, overridingCredential, template, project);
         }
 
         public ListBoxModel doFillServerCredentialsItems() {

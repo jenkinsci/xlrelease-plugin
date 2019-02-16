@@ -2,7 +2,7 @@
 
 This plugin requires XL Release version 4.5+. For older versions of XL Release please use version [4.0.11](http://updates.jenkins-ci.org/download/plugins/xlrelease-plugin/4.0.11/xlrelease-plugin.hpi) of this plugin.
 
-# Build #
+## Build ##
 The Jenkins plugin build is powered by the <a href="https://github.com/jenkinsci/gradle-jpi-plugin">gradle-jpi-plugin</a> (see its <a href="https://wiki.jenkins-ci.org/display/JENKINS/Gradle+JPI+Plugin">documentation</a>).
 
 There are following targets defined:
@@ -15,16 +15,16 @@ Run development server:
 
     ./gradlew server
 
-### Debugging ###
+## Debugging ##
 
 Debugging is configured with GRADLE_OPTIONS env variable.
 
-    GRADLE_OPTS="${GRADLE_OPTS} -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5006" ./gradlew clean server
+    GRADLE_OPTS="${GRADLE_OPTS} -Xdebug -agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=8000" ./gradlew clean server
 
-### Testing ###
+## Testing ##
 
 Additionally to unit tests there are integration tests which you can run by following command:
-    
+
     ./gradlew itest
 
 Integration tests require that you have a running XL Release server at http://localhost:5516 with standard credentials. You can override the location and credentials using Gradle properties (`gradle.properties` file or command-line):
@@ -76,10 +76,10 @@ Then add them to dependencies:
         ...
     }
 
-### Releasing ###
+## Releasing ##
 
 See the [article on XebiaLabs wiki](https://xebialabs.atlassian.net/wiki/display/Labs/Developing+and+releasing+the+Jenkins+plugin).
 
-### Notes ###
+## Notes ##
 
-As doCheck and doAutoComplete not work seamlessly, We gave a validate button for version 6.0.0 of plugin. For more information see Jenkins Bug [JENKINS-37204](https://issues.jenkins-ci.org/browse/JENKINS-37204) 
+As doCheck and doAutoComplete not work seamlessly, We gave a validate button for version 6.0.0 of plugin. For more information see Jenkins Bug [JENKINS-37204](https://issues.jenkins-ci.org/browse/JENKINS-37204)
