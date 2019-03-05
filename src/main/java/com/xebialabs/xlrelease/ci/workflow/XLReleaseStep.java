@@ -106,21 +106,9 @@ public class XLReleaseStep extends AbstractStepImpl {
             return getXLReleaseDescriptor().doValidateTemplate(serverCredentials, overridingCredential, template, project);
         }
 
-        // public FormValidation doValidateTemplate(@QueryParameter String serverCredentials,
-        //     @QueryParameter boolean overridingCredential, 
-        //     @QueryParameter String username, 
-        //     @QueryParameter String password, 
-        //     @QueryParameter boolean useGlobalCredential, 
-        //     @QueryParameter String credentialsId, 
-        //     @QueryParameter final String template, 
-        //     @AncestorInPath AbstractProject project) {
-        //     return getXLReleaseDescriptor().doValidateTemplate(serverCredentials, overridingCredential, username, password, useGlobalCredential, credentialsId, template, project);
-        // }
-
         public ListBoxModel doFillServerCredentialsItems() {
             return getXLReleaseDescriptor().doFillCredentialItems();
         }
-
 
         public Map<String, String> getVariablesOf(final String credential, final String template) {
             return getXLReleaseDescriptor().getVariablesOf(credential, null, template);
@@ -139,7 +127,6 @@ public class XLReleaseStep extends AbstractStepImpl {
             descriptor.load();
             return descriptor;
         }
-
     }
 
     public static final class XLReleaseExecution extends AbstractSynchronousNonBlockingStepExecution<Void> {

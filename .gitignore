@@ -4,6 +4,7 @@
 *.ipr
 *.iws
 *.class
+bin
 build
 out
 target
