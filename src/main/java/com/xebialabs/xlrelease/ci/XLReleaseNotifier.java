@@ -60,6 +60,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -151,9 +152,9 @@ public class XLReleaseNotifier extends Notifier {
         return descriptor;
     }
 
-    public boolean showGolbalCredentials() {
-        return overridingCredential.isUseGlobalCredential();
-    }
+    // public boolean showGolbalCredentials() {
+    //     return overridingCredential.isUseGlobalCredential();
+    // }
 
     public Credential getOverridingCredential() {
         return this.overridingCredential;
@@ -177,12 +178,30 @@ public class XLReleaseNotifier extends Notifier {
 
         private final XLReleaseServerConnectorFactory connectorHolder = new XLReleaseServerConnectorFactory();
 
+        private final transient Map<String,XLReleaseServerConnector> credentialServerMap = newHashMap();
+        private transient static XLReleaseServerFactory xlReleaseServerFactory = new XLReleaseServerFactory();
         public transient String lastCredential;
         public transient Credential lastOverridingCredential;
         private Release release;
 
-        public XLReleaseDescriptor() {}
+        public XLReleaseDescriptor() {
+            load();  //deserialize from xml
+        }
 
+        private void mapCredentialsByName() {
+            for (Credential credential : credentials) {
+                String serverUrl = credential.resolveServerUrl(xlReleaseServerUrl);
+                String proxyUrl = credential.resolveProxyUrl(xlReleaseClientProxyUrl);
+                if (credential.useGlobalCredential) {
+                    StandardUsernamePasswordCredentials cred =  Credential.lookupSystemCredentials(credential.credentialsId);
+                    credentialServerMap.put(credential.name, xlReleaseServerFactory.newInstance(serverUrl, proxyUrl,
+                            cred.getUsername(), cred.getPassword() != null ? cred.getPassword().getPlainText() : ""));
+                } else {
+                    credentialServerMap.put(credential.name, xlReleaseServerFactory.newInstance(serverUrl, proxyUrl,
+                            credential.username, credential.password != null ? credential.password.getPlainText() : ""));
+                }
+            }
+        }
 
         @Override
         public boolean configure(StaplerRequest req, JSONObject json) throws FormException {
@@ -219,6 +238,7 @@ public class XLReleaseNotifier extends Notifier {
         @Override
         public synchronized void load() {
             super.load();
+            connectorHolder.load(xlReleaseServerUrl, xlReleaseClientProxyUrl);
         }
 
         public FormValidation doCheckXLReleaseServerUrl(@QueryParameter String xlReleaseServerUrl) {
@@ -236,7 +256,8 @@ public class XLReleaseNotifier extends Notifier {
             @QueryParameter String credential, 
             @QueryParameter boolean overridingCredential, 
             @QueryParameter final String template,
-            @AncestorInPath AbstractProject project) {
+            @AncestorInPath AbstractProject project) 
+        {
             try {
                 Credential overridingCredentialTemp=null;
                 if ( overridingCredential ) 
@@ -252,9 +273,11 @@ public class XLReleaseNotifier extends Notifier {
                 }
 
                 return error("Template does not exist.");
-            } catch (UniformInterfaceException exp){
+            } 
+            catch (UniformInterfaceException exp){
                 return error("Template does not exist.");
-            }catch (Exception exp) {
+            }
+            catch (Exception exp) {
                 exp.printStackTrace();
                 return warning("Failed to communicate with XL Release server: "+exp.getMessage());
             }
@@ -269,7 +292,6 @@ public class XLReleaseNotifier extends Notifier {
                 }
             }
             return null;
-
         }
 
         private Map<String, String> getVariables(String credential, Credential overridingCredential, Release release) {
@@ -357,16 +379,20 @@ public class XLReleaseNotifier extends Notifier {
         public Credential getCombinedCredential(String credentialName, Credential overridingCredential) {
             checkNotNull(credentialName);
             Credential credential = findCredential(credentialName);
-            if (null != credential && null != overridingCredential) {
-                credential = new Credential(credential.getName(), overridingCredential.getUsername(), overridingCredential.getPassword(), overridingCredential.getCredentialsId()
-                        , overridingCredential.isUseGlobalCredential(), overridingCredential.getSecondaryServerInfo());
+            if ( null != credential && null != overridingCredential ) {
+                credential = new Credential(credential.getName(), 
+                    overridingCredential.getUsername(), 
+                    overridingCredential.getPassword(), 
+                    overridingCredential.getCredentialsId(), 
+                    overridingCredential.isUseGlobalCredential(), 
+                    overridingCredential.getSecondaryServerInfo());
             }
             return credential;
         }
 
         public Credential findCredential(String credentialName) {
             for (Credential credential : credentials) {
-                if (credentialName.equals(credential.getName())) {
+                if ( credentialName.equals(credential.getName()) ) {
                     return credential;
                 }
             }
@@ -374,15 +400,32 @@ public class XLReleaseNotifier extends Notifier {
         }
 
         public Map<String, String> getVariablesOf(final String credential, final Credential overridingCredential, final String template) {
-            release = getTemplate(credential, overridingCredential, template);
-            if (release == null) {
-                return Collections.emptyMap();
+            try
+            {
+                release = getTemplate(credential, overridingCredential, template);
+                if ( release != null ) {
+                    return release.getVariableValues();
+                }
             }
-            return release.getVariableValues();
+            catch (UniformInterfaceException ex)
+            {
+                System.out.println("XLReleaseNotifier.getVariablesOf failed: "+ex.getMessage());
+                // hack? clever? you decide!
+                Map<String,String> errmsg = new HashMap<String,String>();
+                errmsg.put("ERROR: "+ex.getMessage(), "");
+                return errmsg;
+            }
+            return Collections.emptyMap();
         }
 
-        public int getNumberOfVariables(@QueryParameter String credential, @QueryParameter boolean overridingCredential, @QueryParameter String username
-                , @QueryParameter String password, @QueryParameter boolean useGlobalCredential, @QueryParameter String credentialsId, @QueryParameter String template) {
+        public int getNumberOfVariables(@QueryParameter String credential, 
+            @QueryParameter boolean overridingCredential, 
+            @QueryParameter String username, 
+            @QueryParameter String password, 
+            @QueryParameter boolean useGlobalCredential, 
+            @QueryParameter String credentialsId, 
+            @QueryParameter String template) 
+        {
             if (credential != null) {
                 Credential overridingCredentialTemp=null;
                 if(overridingCredential)
@@ -397,7 +440,7 @@ public class XLReleaseNotifier extends Notifier {
 
         @VisibleForTesting
         public static void setXlReleaseServerFactory(final XLReleaseServerFactory xlReleaseServerFactory) {
-            XLReleaseServerConnectorFactory.setXLReleaseServerFactory(xlReleaseServerFactory);
+            XLReleaseDescriptor.xlReleaseServerFactory = xlReleaseServerFactory;
         }
     }
 }

@@ -18,7 +18,6 @@ public class XLReleaseConnectorPost6Impl extends XLReleaseConnectorImpl {
     public static final String SLASH_CHARACTER = "/";
     public static final String SLASH_MARKER = "::SLASH::";
     public static final String SLASH_ESCAPE_SEQ = "\\\\/";
-    private static final String RESULTS_PER_PAGE = "250";
 
     public XLReleaseConnectorPost6Impl(String serverUrl, String proxyUrl, String username, String password) {
         super(serverUrl, proxyUrl, username, password);
@@ -123,7 +122,6 @@ public class XLReleaseConnectorPost6Impl extends XLReleaseConnectorImpl {
                 .path("api/v1/folders")
                 .path(folderId)
                 .path("templates")
-                .queryParam("resultsPerPage", RESULTS_PER_PAGE)
                 .accept(MediaType.APPLICATION_JSON)
                 .get(genericType);
     }
@@ -136,7 +134,6 @@ public class XLReleaseConnectorPost6Impl extends XLReleaseConnectorImpl {
                 .path("api/v1/folders")
                 .path(folderId)
                 .path("list")
-                .queryParam("resultsPerPage", RESULTS_PER_PAGE)
                 .accept(MediaType.APPLICATION_JSON)
                 .get(genericType);
     }

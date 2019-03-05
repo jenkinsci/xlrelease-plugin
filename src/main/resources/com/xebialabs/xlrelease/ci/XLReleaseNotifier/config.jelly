@@ -1,7 +1,7 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:c="/lib/credentials" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
 
-    <f:entry title="${%Global server Credential}" field="credential" help="/plugin/xlrelease-plugin/help-credential.html">
+    <f:entry title="${%Credential}" field="credential" help="/plugin/xlrelease-plugin/help-credential.html">
         <f:select/>
     </f:entry>
 
@@ -40,7 +40,7 @@
         </f:entry>
 
      <f:entry title="${%Variables}" field="variables" >
-             <f:repeatable var="variable" field="variables" noAddButton="false" minimum="${descriptor.getNumberOfVariables(instance.credential,instance.overridingCredential,instance.username,instance.password,instance.useGlobalCredential,instance.credentialsId,instance.template)}">
+             <f:repeatable var="variable" field="variables" noAddButton="false" minimum="${descriptor.getNumberOfVariables(instance.credential, instance.template)}">
                  <table width="100%">
                      <f:entry title="${%Name}" field="propertyName" help="/plugin/xlrelease-plugin/help-variable-name.html">
                          <f:select/>

@@ -15,6 +15,7 @@ import hudson.model.TaskListener;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import hudson.util.Secret;
+
 import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.workflow.steps.AbstractStepDescriptorImpl;
 import org.jenkinsci.plugins.workflow.steps.AbstractStepImpl;
@@ -104,6 +105,17 @@ public class XLReleaseStep extends AbstractStepImpl {
         public FormValidation doValidateTemplate(@QueryParameter String serverCredentials, @QueryParameter boolean overridingCredential, @QueryParameter final String template, @AncestorInPath AbstractProject project) {
             return getXLReleaseDescriptor().doValidateTemplate(serverCredentials, overridingCredential, template, project);
         }
+
+        // public FormValidation doValidateTemplate(@QueryParameter String serverCredentials,
+        //     @QueryParameter boolean overridingCredential, 
+        //     @QueryParameter String username, 
+        //     @QueryParameter String password, 
+        //     @QueryParameter boolean useGlobalCredential, 
+        //     @QueryParameter String credentialsId, 
+        //     @QueryParameter final String template, 
+        //     @AncestorInPath AbstractProject project) {
+        //     return getXLReleaseDescriptor().doValidateTemplate(serverCredentials, overridingCredential, username, password, useGlobalCredential, credentialsId, template, project);
+        // }
 
         public ListBoxModel doFillServerCredentialsItems() {
             return getXLReleaseDescriptor().doFillCredentialItems();

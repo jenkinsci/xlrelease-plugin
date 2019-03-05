@@ -3,6 +3,7 @@
 *.iml
 *.ipr
 *.iws
+*.class
 build
 out
 target

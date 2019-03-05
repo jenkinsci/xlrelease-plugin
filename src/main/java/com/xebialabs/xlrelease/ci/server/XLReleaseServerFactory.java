@@ -49,6 +49,7 @@ public class XLReleaseServerFactory {
     public XLReleaseServerConnector newInstance(String serverUrl, String proxyUrl, Credential credential) {
         String userName = credential.getUsername();
         String password = credential.getPassword().getPlainText();
+
         if (credential.isUseGlobalCredential()) {
             StandardUsernamePasswordCredentials cred =  Credential.lookupSystemCredentials(credential.getCredentialsId());
             userName =  cred.getUsername();
@@ -56,6 +57,7 @@ public class XLReleaseServerFactory {
         }
 
         XLReleaseServerConnectorFacade server = new XLReleaseServerConnectorFacade(serverUrl, proxyUrl, userName, password);
+
         return newProxy(XLReleaseServerConnector.class, new PluginFirstClassloaderInvocationHandler(server));
     }
 
