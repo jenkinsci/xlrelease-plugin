@@ -378,8 +378,14 @@ public class XLReleaseNotifier extends Notifier {
 
         public Credential getCombinedCredential(String credentialName, Credential overridingCredential) {
             checkNotNull(credentialName);
+
             Credential credential = findCredential(credentialName);
-            if ( null != credential && null != overridingCredential ) {
+            if ( credential == null )
+            {
+                throw new IllegalArgumentException("credential '"+credentialName+"' not found");
+            }
+
+            if ( null != overridingCredential && overridingCredential.getUsername() != null ) {
                 credential = new Credential(credential.getName(), 
                     overridingCredential.getUsername(), 
                     overridingCredential.getPassword(), 

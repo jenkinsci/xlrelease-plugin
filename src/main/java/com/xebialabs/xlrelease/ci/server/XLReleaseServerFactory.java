@@ -48,12 +48,21 @@ public class XLReleaseServerFactory {
 
     public XLReleaseServerConnector newInstance(String serverUrl, String proxyUrl, Credential credential) {
         String userName = credential.getUsername();
-        String password = credential.getPassword().getPlainText();
+        String password = (credential.getPassword() != null ? credential.getPassword().getPlainText() : "" );
 
-        if (credential.isUseGlobalCredential()) {
+        if ( credential.isUseGlobalCredential() ) 
+        {
             StandardUsernamePasswordCredentials cred =  Credential.lookupSystemCredentials(credential.getCredentialsId());
-            userName =  cred.getUsername();
-            password = cred.getPassword().getPlainText();
+            if ( cred != null )
+            {
+                userName =  cred.getUsername();
+                password = ( cred.getPassword() != null ? cred.getPassword().getPlainText() : "" );
+            }
+        }
+
+        if ( userName == null ) 
+        {
+            throw new IllegalArgumentException("user name cannot be null");
         }
 
         XLReleaseServerConnectorFacade server = new XLReleaseServerConnectorFacade(serverUrl, proxyUrl, userName, password);

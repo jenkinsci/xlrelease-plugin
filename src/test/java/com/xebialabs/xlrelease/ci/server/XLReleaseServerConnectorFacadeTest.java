@@ -1,3 +1,6 @@
+// :copyright: (c) 2019 by XebiaLabs BV.
+// :license: GPLv2, see LICENSE for more details.
+
 package com.xebialabs.xlrelease.ci.server;
 
 import org.junit.Test;

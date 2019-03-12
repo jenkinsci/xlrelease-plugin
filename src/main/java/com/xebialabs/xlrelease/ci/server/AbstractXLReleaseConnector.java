@@ -147,7 +147,7 @@ public abstract class AbstractXLReleaseConnector implements XLReleaseServerConne
 
         Client client = Client.create(config);
         client.addFilter(new HTTPBasicAuthFilter(user, password));
-        return client.resource(serverUrl);
+        return client.resource(serverUrl.replace("\"", ""));
     }
 
     protected String getTemplateInternalId(final String templateTitle) {
