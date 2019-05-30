@@ -32,10 +32,13 @@ import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredenti
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.xebialabs.xlrelease.ci.Credential;
+import java.util.logging.Logger;
 import hudson.util.Secret;
 
 
+
 public class XLReleaseServerFactory {
+    private final static Logger LOGGER = Logger.getLogger(XLReleaseServerFactory.class.getName());
 
     public boolean validConnection(String serverUrl, String proxyUrl, String username, String password) throws IllegalStateException {
         newInstance(serverUrl, proxyUrl, username, password).testConnection();  //throws IllegalStateException on failure.
@@ -50,17 +53,19 @@ public class XLReleaseServerFactory {
         String userName = credential.getUsername();
         String password = (credential.getPassword() != null ? credential.getPassword().getPlainText() : "" );
 
-        if ( credential.isUseGlobalCredential() ) 
+        if ( credential.isUseGlobalCredential() )
         {
+            LOGGER.info("Performing lookup for system credentials");
             StandardUsernamePasswordCredentials cred =  Credential.lookupSystemCredentials(credential.getCredentialsId());
-            if ( cred != null )
-            {
-                userName =  cred.getUsername();
-                password = ( cred.getPassword() != null ? cred.getPassword().getPlainText() : "" );
+            if (cred == null) {
+                throw new IllegalArgumentException(String.format("Credentials for '%s' not found.", credential.getCredentialsId()));
             }
+            userName =  cred.getUsername();
+            password = ( cred.getPassword() != null ? cred.getPassword().getPlainText() : "" );
+
         }
 
-        if ( userName == null ) 
+        if ( userName == null )
         {
             throw new IllegalArgumentException("user name cannot be null");
         }
@@ -108,4 +113,6 @@ public class XLReleaseServerFactory {
             throw new IllegalArgumentException();
         }
     }
+
+
 }
