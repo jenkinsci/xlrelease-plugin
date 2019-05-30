@@ -32,8 +32,7 @@ public class XLReleaseServerConnectorFactory {
             if (null == xlReleaseServer) {
                 synchronized (this) {
                     xlReleaseServer = xlReleaseServerFactory.newInstance(serverUrl, proxyUrl, credential);
-                    credentialServerMap.put(credential.getKey(), xlReleaseServerFactory.newInstance(serverUrl, proxyUrl,
-                            credential.getUsername(), credential.getPassword() != null ? credential.getPassword().getPlainText() : ""));
+                    credentialServerMap.put(credential.getKey(), xlReleaseServerFactory.newInstance(serverUrl, proxyUrl, credential));
                 }
             }
         }
@@ -42,7 +41,4 @@ public class XLReleaseServerConnectorFactory {
 
     }
 
-    public static void setXLReleaseServerFactory(XLReleaseServerFactory xlReleaseServerFactory) {
-        XLReleaseServerConnectorFactory.xlReleaseServerFactory = xlReleaseServerFactory;
-    }
 }
