@@ -1,12 +1,9 @@
 package com.xebialabs.xlrelease.ci.server;
 
 import com.xebialabs.xlrelease.ci.Credential;
-import com.xebialabs.xlrelease.ci.XLReleaseNotifier.XLReleaseDescriptor;
 
 import java.util.Map;
 import java.util.logging.Logger;
-
-import static com.google.common.collect.Maps.newHashMap;
 
 public class XLReleaseServerConnectorFactory {
     private String serverUrl;
@@ -26,6 +23,12 @@ public class XLReleaseServerConnectorFactory {
         if (null != credential) {
         	String _serverUrl = credential.showSecondaryServerSettings()?credential.getSecondaryServerUrl():serverUrl;
         	String _proxyUrl = credential.showSecondaryServerSettings()?credential.getSecondaryProxyUrl():proxyUrl;
+        	
+        	//XLINT-458 and 706, the key used to look up the XLReleaseServerConnector is not unique
+        	//For an example: XLR servers traditionally have username:password setup as admin:admin
+        	//the key was set as username + ":" + password.getPlainText() + "@" + name + ":" + credentialsId + ":"
+        	//will return the first stored server connector when the key is matched. Without considering the URL, it ends up job to be executed in wrong server.
+        	//added server URL as part of key to distinguish them.
         	String credKey = credential.getKey()+":"+_serverUrl;
 
             XLReleaseServerConnector xlReleaseServerConnectorServerRef = credentialServerMap.get(credKey);
