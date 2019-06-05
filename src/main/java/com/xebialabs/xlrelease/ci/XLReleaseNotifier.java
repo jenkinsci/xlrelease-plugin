@@ -188,21 +188,6 @@ public class XLReleaseNotifier extends Notifier {
             load();  //deserialize from xml
         }
 
-        private void mapCredentialsByName() {
-            for (Credential credential : credentials) {
-                String serverUrl = credential.resolveServerUrl(xlReleaseServerUrl);
-                String proxyUrl = credential.resolveProxyUrl(xlReleaseClientProxyUrl);
-                if (credential.useGlobalCredential) {
-                    StandardUsernamePasswordCredentials cred =  Credential.lookupSystemCredentials(credential.credentialsId);
-                    credentialServerMap.put(credential.name, xlReleaseServerFactory.newInstance(serverUrl, proxyUrl,
-                            cred.getUsername(), cred.getPassword() != null ? cred.getPassword().getPlainText() : ""));
-                } else {
-                    credentialServerMap.put(credential.name, xlReleaseServerFactory.newInstance(serverUrl, proxyUrl,
-                            credential.username, credential.password != null ? credential.password.getPlainText() : ""));
-                }
-            }
-        }
-
         @Override
         public boolean configure(StaplerRequest req, JSONObject json) throws FormException {
             //this method is called when the global form is submitted.
@@ -373,7 +358,7 @@ public class XLReleaseNotifier extends Notifier {
         }
 
         private XLReleaseServerConnector getXLReleaseServer(String credentialName, Credential overridingCredential) {
-            return connectorHolder.getXLReleaseServerConnector(getCombinedCredential(credentialName, overridingCredential));
+            return connectorHolder.getXLReleaseServerConnector(getCombinedCredential(credentialName, overridingCredential),credentialServerMap);
         }
 
         public Credential getCombinedCredential(String credentialName, Credential overridingCredential) {
@@ -428,8 +413,8 @@ public class XLReleaseNotifier extends Notifier {
             @QueryParameter boolean overridingCredential, 
             @QueryParameter String username, 
             @QueryParameter String password, 
-            @QueryParameter boolean useGlobalCredential, 
-            @QueryParameter String credentialsId, 
+            @QueryParameter boolean useGlobalCredential,
+            @QueryParameter String credentialsId,
             @QueryParameter String template) 
         {
             if (credential != null) {
