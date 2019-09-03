@@ -31,12 +31,12 @@ import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 public class CreateReleasePublicForm {
 
     private String releaseTitle;
-    private Map<String, String> variables = new HashMap<String, String>();
+    private Map<String, Object> variables = new HashMap<String, Object>();
 
     public CreateReleasePublicForm() {
     }
 
-    public CreateReleasePublicForm(final String releaseTitle, final Map<String, String> variables) {
+    public CreateReleasePublicForm(final String releaseTitle, final Map<String, Object> variables) {
         this.releaseTitle = releaseTitle;
         this.variables = variables;
     }
@@ -49,11 +49,11 @@ public class CreateReleasePublicForm {
         this.releaseTitle = releaseTitle;
     }
 
-    public Map<String, String> getVariables() {
+    public Map<String, Object> getVariables() {
         return variables;
     }
 
-    public void setVariables(final Map<String, String> variables) {
+    public void setVariables(final Map<String, Object> variables) {
         this.variables = variables;
     }
 }

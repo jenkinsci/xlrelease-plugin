@@ -19,11 +19,22 @@ import org.codehaus.jackson.jaxrs.JacksonJaxbJsonProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.management.RuntimeErrorException;
 import javax.ws.rs.core.MediaType;
+
+import com.google.gson.Gson;
+
+import java.util.Date;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import java.text.SimpleDateFormat;
+import java.text.ParseException;
 
 import static com.xebialabs.xlrelease.ci.NameValuePair.VARIABLE_PREFIX;
 import static com.xebialabs.xlrelease.ci.NameValuePair.VARIABLE_SUFFIX;
@@ -171,10 +182,11 @@ public abstract class AbstractXLReleaseConnector implements XLReleaseServerConne
         return result;
     }
 
-    protected Map<String, String> convertToVariablesMap(final List<NameValuePair> variables) {
-        Map<String, String> variablesMap = new HashMap<String, String>();
+    protected Map<String, Object> convertToVariablesMap(final List<NameValuePair> variables, final Map<String, TemplateVariable> templateVariables) {
+        Map<String, Object> variablesMap = new HashMap<String, Object>();
         for (NameValuePair variable : variables) {
-            variablesMap.put(getVariableName(variable.getPropertyName()), variable.propertyValue);
+            String varType = templateVariables.get(variable.getPropertyName()).getType();
+            variablesMap.put(getVariableName(variable.getPropertyName()), castVariable(variable.propertyValue, varType));
         }
         return variablesMap;
     }
@@ -184,6 +196,80 @@ public abstract class AbstractXLReleaseConnector implements XLReleaseServerConne
             return VARIABLE_PREFIX + variable + VARIABLE_SUFFIX;
         }
         return variable;
+    }
+
+    private Object castVariable (final String variable, String type) {
+        switch (type) {
+            case "xlrelease.BooleanVariable":
+                return Boolean.valueOf(variable);
+            case "xlrelease.IntegerVariable":
+                return Integer.valueOf(variable);
+            case "xlrelease.DateVariable":
+                return parseDate(variable);
+            case "xlrelease.ListStringVariable":
+                return parseList(variable);
+            case "xlrelease.MapStringStringVariable":
+                return parseMap(variable);
+            case "xlrelease.SetStringVariable":
+                return parseSet(variable);
+
+            // Commented cases fall under default case
+            // case "xlrelease.StringVariable":
+            // case "xlrelease.PasswordStringVariable":
+
+            // List Box doesn't enforce possible values via API
+            // May want to introduce validation and/or autocompletion
+            // case "xlrelease.XLDeployPackageVariable":
+            // case "xlrelease.XLDeployEnvironmentVariable":
+            // case "xlrelease.ListOfStringValueProviderConfiguration":
+
+            default:
+                return variable;
+        }
+    }
+
+
+    private Date parseDate(final String s) {
+        List<SimpleDateFormat> formats = new ArrayList<SimpleDateFormat>();
+
+        formats.add(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ"));
+        formats.add(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX"));
+        formats.add(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ"));
+        formats.add(new SimpleDateFormat("yyyy-MM-dd"));
+        formats.add(new SimpleDateFormat("dd-MMM-yyyy"));
+        formats.add(new SimpleDateFormat("dd/MM/yyyy"));
+
+        for (SimpleDateFormat format : formats){
+            try {
+                return new Date(format.parse(s).getTime());
+            } catch (ParseException e) {
+                // Hitting this exception is fine, we have multiple formats.
+            }
+        }
+
+        // None of the formats worked.
+        throw new RuntimeException("Date '" + s +  "' is invalid." +
+                "\nSupported date formats:\nyyyy-MM-dd'T'HH:mm:ss.SSSZ" +
+                "\nyyyy-MM-dd'T'HH:mm:ssXXX\nyyyy-MM-dd'T'HH:mm:ssZ\nyyyy-MM-dd\ndd-MMM-yyyy\ndd/MM/yyyy" +
+                "\nEx. 2019-08-28T11:23:18Z");
+    }
+
+    private List<String> parseList(final String s) {
+        List<String> list = Arrays.asList(s.split(","));
+        list.replaceAll(String::trim);
+        return list;
+    }
+
+    private Map<String, String> parseMap(final String s) {
+        Gson g = new Gson();
+        Map<String, String> map = g.fromJson(s, Map.class);
+        return map;
+    }
+
+    private Set<String> parseSet(final String s) {
+        List<String> list = parseList(s);
+        Set<String> set = list.stream().collect(Collectors.toSet());
+        return set;
     }
 
     @Override

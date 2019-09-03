@@ -101,7 +101,7 @@ dependencies {
     itestCompile "org.jenkins-ci.plugins.workflow:workflow-aggregator:2.5@jar"
     itestCompile "org.jenkins-ci.plugins.workflow:workflow-api:2.23.1@jar"
     itestCompile "org.jenkins-ci.plugins.workflow:workflow-cps:2.41@jar"
-    itestCompile "org.jenkins-ci.plugins.workflow:workflow-job:2.15@jar" 
+    itestCompile "org.jenkins-ci.plugins.workflow:workflow-job:2.15@jar"
     itestCompile "org.jenkins-ci.plugins.workflow:workflow-scm-step:2.6@jar"
     itestCompile "org.jenkins-ci.plugins.workflow:workflow-step-api:2.13@jar"
     itestCompile "org.jenkins-ci.plugins.workflow:workflow-support:2.16@jar"
@@ -126,6 +126,7 @@ dependencies {
     compile "org.slf4j:slf4j-api:1.7.5"
     compile "javax.ws.rs:jsr311-api:1.1.1"
     compile "javax.xml.bind:jaxb-api:2.2.2"
+    compile "com.google.code.gson:gson:2.8.5"
 
     jenkinsPlugins "org.jenkins-ci.plugins:credentials:2.1.18@jar"
     jenkinsPlugins 'org.jenkins-ci.plugins.workflow:workflow-step-api:2+@jar'
