@@ -244,7 +244,7 @@ public class XLReleaseNotifier extends Notifier {
             @AncestorInPath AbstractProject project) 
         {
             try {
-                Credential overridingCredentialTemp=null;
+                Credential overridingCredentialTemp = null;
                 if ( overridingCredential ) 
                 {
                     XLReleaseNotifier notifier = (XLReleaseNotifier) project.getPublishersList().get(this);
@@ -254,7 +254,7 @@ public class XLReleaseNotifier extends Notifier {
                 this.release = getTemplate(credential, overridingCredentialTemp, template);
                 if ( this.release != null && !"folder".equals(release.getStatus()) ) 
                 {
-                    return warning("Changing template may unintentionally change your variables");
+                    return ok("%s is valid template.", template);
                 }
 
                 return error("Template does not exist.");

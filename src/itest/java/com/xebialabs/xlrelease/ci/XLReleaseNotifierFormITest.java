@@ -94,14 +94,14 @@ public class XLReleaseNotifierFormITest {
                 null, 
                 true,
                 overridingCredential));
-        project.getPublishersList().add(before);
 
+        project.getPublishersList().add(before);
         HtmlForm xlrForm = jenkins.createWebClient().getPage(project, "configure").getFormByName("config");
         HtmlInput templateSelect = xlrForm.getInputsByName("_.template").get(0);
 
-        // System.out.println("=========================================");
-        // System.out.println("XLR Form: "+xlrForm.toString());
-        // this.printDomElement(xlrForm.getChildElements(), 1);
+        /*System.out.println("=========================================");
+        System.out.println("XLR Form: "+xlrForm.toString());
+        this.printDomElement(xlrForm.getChildElements(), 1);*/
 
         assertThat(templateSelect.asText(), equalTo(TEMPLATE_NAME));
         assertThat(xlrForm.getInputByName("_.version").asText(), equalTo(RELEASE_TITLE));
