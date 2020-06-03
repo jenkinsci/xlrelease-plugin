@@ -43,9 +43,9 @@ repositories {
 }
 
 jenkinsPlugin {
-    coreVersion = '2.222.3' // we need to support LTS versions
+    coreVersion = '2.150.1' // we need to support LTS versions
     displayName = "XebiaLabs XL Release Plugin"
-    url = 'https://wiki.jenkins-ci.org/display/JENKINS/XL+Release+Plugin'
+    url = 'https://github.com/jenkinsci/xlrelease-plugin/blob/master/docs/README.md'
     gitHubUrl = 'https://github.com/jenkinsci/xlrelease-plugin'
 
     developers {
@@ -115,8 +115,10 @@ dependencies {
     compile "javax.xml.bind:jaxb-api:2.2.2"
     compile "com.google.code.gson:gson:2.8.5"
 
-    compile "org.jenkins-ci.plugins:credentials:2.3.7"
-    compile "org.jenkins-ci.plugins.workflow:workflow-step-api:2.22"
+    compile "org.jenkins-ci.plugins:credentials:2.1.18"
+    compile "org.jenkins-ci.plugins.workflow:workflow-step-api:2+"
+    compile "org.jenkins-ci.plugins:cloudbees-folder:6.7"
+    compile "org.jenkins-ci.plugins:structs:1.10"
 
     testCompile "org.mockito:mockito-core:2.25.0"
 }
