@@ -117,6 +117,8 @@ dependencies {
 
     compile "org.jenkins-ci.plugins:credentials:2.1.18"
     compile "org.jenkins-ci.plugins.workflow:workflow-step-api:2+"
+    compile "org.jenkins-ci.plugins:cloudbees-folder:6.7"
+    compile "org.jenkins-ci.plugins:structs:1.10"
 
     testCompile "org.mockito:mockito-core:2.25.0"
 }
