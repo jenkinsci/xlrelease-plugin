@@ -1,28 +1,9 @@
-/**
- * Copyright (c) 2014, XebiaLabs B.V., All rights reserved.
- *
- *
- * The XL Release plugin for Jenkins is licensed under the terms of the GPLv2
- * <http://www.gnu.org/licenses/old-licenses/gpl-2.0.html>, like most XebiaLabs Libraries.
- * There are special exceptions to the terms and conditions of the GPLv2 as it is applied to
- * this software, see the FLOSS License Exception
- * <https://github.com/jenkinsci/xlrelease-plugin/blob/master/LICENSE>.
- *
- * This program is free software; you can redistribute it and/or modify it under the terms
- * of the GNU General Public License as published by the Free Software Foundation; version 2
- * of the License.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License along with this
- * program; if not, write to the Free Software Foundation, Inc., 51 Franklin St, Fifth
- * Floor, Boston, MA 02110-1301  USA
- */
+// :copyright: (c) 2019 by XebiaLabs BV.
+// :license: GPLv2, see LICENSE for more details.
 
 package com.xebialabs.xlrelease.ci;
 
+import com.gargoylesoftware.htmlunit.html.DomElement;
 import com.gargoylesoftware.htmlunit.html.HtmlForm;
 import com.gargoylesoftware.htmlunit.html.HtmlInput;
 import com.sun.jersey.api.client.Client;
@@ -36,24 +17,24 @@ import com.xebialabs.xlrelease.ci.util.Release;
 import hudson.model.Descriptor;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
-import hudson.model.Result;
 import hudson.util.Secret;
 import net.sf.json.JSONObject;
+
+import org.apache.commons.io.Charsets;
+import org.apache.commons.io.IOUtils;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+import org.jvnet.hudson.test.BuildWatcher;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.recipes.LocalData;
 import org.kohsuke.stapler.StaplerRequest;
 
 import javax.ws.rs.core.MediaType;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -90,6 +71,9 @@ public class XLReleaseNotifierFormITest {
     @Rule
     public JenkinsRule jenkins = new JenkinsRule();
 
+    @ClassRule 
+    public static BuildWatcher bw = new BuildWatcher();
+
     @Before
     public void before() {
         host = System.getProperty(ENV_XLR_HOST) != null ? System.getProperty(ENV_XLR_HOST) : DEFAULT_HOST;
@@ -101,25 +85,43 @@ public class XLReleaseNotifierFormITest {
     @LocalData
     public void shouldShowListOfTemplatesWithSavedAsPreSelected() throws Exception {
         FreeStyleProject project = jenkins.createFreeStyleProject();
+        Credential overridingCredential = new Credential(ADMIN_CREDENTIAL, username, Secret.fromString(password), null, true, null);
         XLReleaseNotifier before = reconfigureWithEnvSettings(
-                new XLReleaseNotifier(ADMIN_CREDENTIAL, TEMPLATE_NAME, RELEASE_TITLE, null, true, null));
-        project.getPublishersList().add(before);
+            new XLReleaseNotifier(
+                ADMIN_CREDENTIAL, 
+                TEMPLATE_NAME, 
+                RELEASE_TITLE, 
+                null, 
+                true,
+                overridingCredential));
 
+        project.getPublishersList().add(before);
         HtmlForm xlrForm = jenkins.createWebClient().getPage(project, "configure").getFormByName("config");
         HtmlInput templateSelect = xlrForm.getInputsByName("_.template").get(0);
 
+        /*System.out.println("=========================================");
+        System.out.println("XLR Form: "+xlrForm.toString());
+        this.printDomElement(xlrForm.getChildElements(), 1);*/
+
         assertThat(templateSelect.asText(), equalTo(TEMPLATE_NAME));
         assertThat(xlrForm.getInputByName("_.version").asText(), equalTo(RELEASE_TITLE));
-        assertThat(xlrForm.getSelectByName("_.propertyName").getSelectedOptions().get(0).asText(), equalTo(USER_VARIABLE));
+        assertThat(xlrForm.getSelectByName("_.credential").getSelectedOptions().get(0).asText(), equalTo(ADMIN_CREDENTIAL));
     }
 
     @Test
     @LocalData
     public void shouldStartRelease() throws Exception {
         FreeStyleProject project = jenkins.createFreeStyleProject();
-        XLReleaseNotifier before = reconfigureWithEnvSettings(new XLReleaseNotifier(
-                ADMIN_CREDENTIAL, TEMPLATE_NAME, RELEASE_TITLE,
-                newArrayList(new NameValuePair(USER_VARIABLE, "jenkins")), true, null));
+        Credential overridingCredential = new Credential(ADMIN_CREDENTIAL, null, null, null, true, null);
+        XLReleaseNotifier before = reconfigureWithEnvSettings(
+            new XLReleaseNotifier(
+                ADMIN_CREDENTIAL, 
+                TEMPLATE_NAME, 
+                RELEASE_TITLE, 
+                newArrayList(new NameValuePair(USER_VARIABLE, "jenkins")), 
+                true,
+                overridingCredential));
+
         project.getPublishersList().add(before);
         FreeStyleBuild freeStyleBuild = jenkins.buildAndAssertSuccess(project);
         String releaseId = findReleaseId(freeStyleBuild.getLog(20));
@@ -131,10 +133,18 @@ public class XLReleaseNotifierFormITest {
     @Test
     @LocalData
     public void shouldStartReleaseWithJenkinsFile() throws Exception {
-        WorkflowJob job = jenkins.jenkins.createProject(WorkflowJob.class, "workflow");
-        job.setDefinition(new CpsFlowDefinition(getJenkinsFileScript(), true));
-        WorkflowRun run = jenkins.assertBuildStatus(Result.SUCCESS, job.scheduleBuild2(0).get());
+        System.out.println("shouldStartReleaseWithJenkinsFile: begin");
+        String jenkinsfile = IOUtils.toString(getClass().getClassLoader().getResourceAsStream("JenkinsFile"), Charsets.UTF_8);
+        System.out.println("shouldStartReleaseWithJenkinsFile: got jenkinsfile");
+
+        WorkflowJob job = jenkins.createProject(WorkflowJob.class, "workflow");
+        job.setDefinition(new CpsFlowDefinition(jenkinsfile, true));
+        System.out.println("shouldStartReleaseWithJenkinsFile: got job");
+
+        WorkflowRun run = jenkins.buildAndAssertSuccess(job);
+        System.out.println("got run: "+run.toString());
         String releaseId = findReleaseId(run.getLog(20));
+        System.out.println("got releaseId: "+releaseId);
         assertThat(releaseId, notNullValue());
         waitForReleaseStarted(releaseId);
     }
@@ -147,7 +157,7 @@ public class XLReleaseNotifierFormITest {
 
         GenericType<Release> genericType = new GenericType<Release>() {};
 
-        int maxNumberOfRetry = 30;
+        int maxNumberOfRetry = 45;
         while (maxNumberOfRetry-- > 0) {
             try {
                 Release release = service.path("api").path("v1").path("releases").path(releaseId).accept(MediaType.APPLICATION_JSON).get(genericType);
@@ -162,12 +172,12 @@ public class XLReleaseNotifierFormITest {
             Thread.sleep(1000);
         }
 
-        fail("Release " + releaseId + " was not started within 30 seconds");
+        fail("Release " + releaseId + " was not started within 45 seconds");
     }
 
     private String findReleaseId(List<String> log) {
         for (String line : log) {
-            Matcher matcher = Pattern.compile(".*\"(Applications/.*Release\\d+).*").matcher(line);
+            Matcher matcher = Pattern.compile(".*\"(Applications/.*Release[^/-]+).*\"").matcher(line);
             if (matcher.matches()) {
                 return matcher.group(1);
             }
@@ -188,14 +198,17 @@ public class XLReleaseNotifierFormITest {
         return xlReleaseNotifier;
     }
 
-    private String getJenkinsFileScript () throws IOException {
-        String jenkinsFile = "";
-        try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-
-            Files.copy(Paths.get(getClass().getClassLoader().getResource("JenkinsFile").getFile()), outputStream);
-            jenkinsFile = new String(outputStream.toByteArray());
+    // Helper method to print xml elements.  Useful for debugging.
+    private void printDomElement(Iterable<DomElement> el, int depth)
+    {
+        for (DomElement cel : el )
+        {
+            System.out.print("                                                                    ".substring(0, depth*2));
+            System.out.println(cel.toString());
+            if ( cel.getChildElementCount() > 0 ) 
+            {
+                printDomElement(cel.getChildElements(), depth+1);
+            }
         }
-        return jenkinsFile;
     }
-
 }

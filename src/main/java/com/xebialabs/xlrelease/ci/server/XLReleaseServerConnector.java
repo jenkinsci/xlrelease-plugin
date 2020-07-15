@@ -24,6 +24,7 @@
 package com.xebialabs.xlrelease.ci.server;
 
 import java.util.List;
+import java.util.Map;
 
 import com.xebialabs.xlrelease.ci.NameValuePair;
 import com.xebialabs.xlrelease.ci.util.Release;

@@ -9,16 +9,20 @@ import com.xebialabs.xlrelease.ci.util.JenkinsReleaseListener;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.Util;
+import hudson.model.AbstractProject;
 import hudson.model.AutoCompletionCandidates;
 import hudson.model.TaskListener;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import hudson.util.Secret;
+
 import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.workflow.steps.AbstractStepDescriptorImpl;
 import org.jenkinsci.plugins.workflow.steps.AbstractStepImpl;
 import org.jenkinsci.plugins.workflow.steps.AbstractSynchronousNonBlockingStepExecution;
 import org.jenkinsci.plugins.workflow.steps.StepContextParameter;
+
+import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
@@ -37,22 +41,26 @@ public class XLReleaseStep extends AbstractStepImpl {
     public String version;
     public List<NameValuePair> variables = null;
     public boolean startRelease = false;
-    public final String overrideCredentialId;
+    public String overrideCredentialId;
 
     @DataBoundConstructor
-    public XLReleaseStep(String serverCredentials, String template, String version, List<NameValuePair> variables, boolean startRelease, String releaseTitle, String overrideCredentialId) {
+    public XLReleaseStep(String serverCredentials, String template, String version, List<NameValuePair> variables, boolean startRelease, String releaseTitle) {
         this.serverCredentials = serverCredentials;
         this.template = template;
         this.version = version;
         this.variables = variables;
         this.startRelease = startRelease;
         this.releaseTitle = releaseTitle;
-        this.overrideCredentialId = overrideCredentialId;
     }
 
     @DataBoundSetter
     public void setVersion(String version) {
         this.version = Util.fixEmptyAndTrim(version);
+    }
+
+    @DataBoundSetter
+    public void setOverrideCredentialId(String overrideCredentialId) {
+        this.overrideCredentialId = overrideCredentialId;
     }
 
     @DataBoundSetter
@@ -94,15 +102,13 @@ public class XLReleaseStep extends AbstractStepImpl {
             return getXLReleaseDescriptor().doAutoCompleteTemplate(value);
         }
 
-        public FormValidation doValidateTemplate(@QueryParameter String serverCredentials,@QueryParameter boolean overridingCredential, @QueryParameter String username
-                , @QueryParameter String password, @QueryParameter boolean useGlobalCredential, @QueryParameter String credentialsId, @QueryParameter final String template) {
-            return getXLReleaseDescriptor().doValidateTemplate(serverCredentials, overridingCredential,username,password,useGlobalCredential,credentialsId, template);
+        public FormValidation doValidateTemplate(@QueryParameter String serverCredentials, @QueryParameter boolean overridingCredential, @QueryParameter final String template, @AncestorInPath AbstractProject project) {
+            return getXLReleaseDescriptor().doValidateTemplate(serverCredentials, overridingCredential, template, project);
         }
 
         public ListBoxModel doFillServerCredentialsItems() {
             return getXLReleaseDescriptor().doFillCredentialItems();
         }
-
 
         public Map<String, String> getVariablesOf(final String credential, final String template) {
             return getXLReleaseDescriptor().getVariablesOf(credential, null, template);
@@ -121,7 +127,6 @@ public class XLReleaseStep extends AbstractStepImpl {
             descriptor.load();
             return descriptor;
         }
-
     }
 
     public static final class XLReleaseExecution extends AbstractSynchronousNonBlockingStepExecution<Void> {

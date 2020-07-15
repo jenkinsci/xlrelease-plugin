@@ -175,9 +175,17 @@ public class Credential extends AbstractDescribableImpl<Credential> {
     }
 
     public static StandardUsernamePasswordCredentials lookupSystemCredentials(String credentialsId) {
+        if ( credentialsId == null )
+        {
+            return null;
+        }
+
         return CredentialsMatchers.firstOrNull(
-                lookupCredentials(StandardUsernamePasswordCredentials.class, Jenkins.getInstance(), ACL.SYSTEM,
-                        HTTP_SCHEME, HTTPS_SCHEME),
+                lookupCredentials(StandardUsernamePasswordCredentials.class, 
+                    Jenkins.getInstanceOrNull(), 
+                    ACL.SYSTEM,
+                    HTTP_SCHEME, 
+                    HTTPS_SCHEME),
                 CredentialsMatchers.withId(credentialsId)
         );
     }

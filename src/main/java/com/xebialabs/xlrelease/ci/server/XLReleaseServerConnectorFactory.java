@@ -1,60 +1,62 @@
 package com.xebialabs.xlrelease.ci.server;
 
-import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredentials;
 import com.xebialabs.xlrelease.ci.Credential;
-import com.xebialabs.xlrelease.ci.Messages;
 
-import java.util.List;
 import java.util.Map;
-import java.util.WeakHashMap;
-
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.collect.Lists.newArrayList;
+import java.util.logging.Logger;
 
 public class XLReleaseServerConnectorFactory {
-
-    private String xlReleaseServerUrl;
-    private String xlReleaseClientProxyUrl;
-    private List<Credential> credentials = newArrayList();
-
-    private final transient static Map<String,XLReleaseServerConnector> credentialServerMap = new WeakHashMap<>();
+    private String serverUrl;
+    private String proxyUrl;
     private transient static XLReleaseServerFactory xlReleaseServerFactory = new XLReleaseServerFactory();
+    private final static Logger LOGGER = Logger.getLogger(XLReleaseServerConnectorFactory.class.getName());
 
-    public XLReleaseServerConnectorFactory(){
 
+    public void load(String serverUrl, String proxyUrl) {
+        this.serverUrl = serverUrl;
+        this.proxyUrl = proxyUrl;
     }
 
-    public void load(String xlReleaseServerUrl, String xlReleaseClientProxyUrl, List<Credential> credentials){
-        this.xlReleaseServerUrl=xlReleaseServerUrl;
-        this.xlReleaseClientProxyUrl=xlReleaseClientProxyUrl;
-        this.credentials=credentials;
-        initMap();
-    }
-
-    private void initMap() {
-        for (Credential credential : credentials) {
-            getXLReleaseServerConnector(credential);
-        }
-    }
-
-    public XLReleaseServerConnector getXLReleaseServerConnector(Credential credential) {
-        XLReleaseServerConnector xlReleaseServerConnector = null;
+    public XLReleaseServerConnector getXLReleaseServerConnector(Credential credential, Map<String, XLReleaseServerConnector> credentialServerMap) {
+        XLReleaseServerConnector xlReleaseServer = null;
+        
         if (null != credential) {
-            xlReleaseServerConnector = credentialServerMap.get(credential.getKey());
-            if (null == xlReleaseServerConnector) {
+        	String _serverUrl = credential.showSecondaryServerSettings()?credential.getSecondaryServerUrl():serverUrl;
+        	String _proxyUrl = credential.showSecondaryServerSettings()?credential.getSecondaryProxyUrl():proxyUrl;
+        	
+        	//XLINT-458 and 706, the key used to look up the XLReleaseServerConnector is not unique
+        	//For an example: XLR servers traditionally have username:password setup as admin:admin
+        	//the key was set as username + ":" + password.getPlainText() + "@" + name + ":" + credentialsId + ":"
+        	//will return the first stored server connector when the key is matched. Without considering the URL, it ends up job to be executed in wrong server.
+        	//added server URL as part of key to distinguish them.
+        	String credKey = credential.getKey()+":"+_serverUrl;
+
+            XLReleaseServerConnector xlReleaseServerConnectorServerRef = credentialServerMap.get(credKey);
+
+            if (null != xlReleaseServerConnectorServerRef) {
+                xlReleaseServer = xlReleaseServerConnectorServerRef;
+                LOGGER.info("XLReleaseServerConnector found in the HashMap using key for username=" + credential.getUsername()+ ", server url=" + _serverUrl);
+            }
+            if(credential.showSecondaryServerSettings()) {
+            	 LOGGER.info("non-default server URL=" + credential.getSecondaryServerUrl());
+            	 LOGGER.info("non-default proxy server URL=" + credential.getSecondaryProxyUrl());
+            }
+            else {
+		            LOGGER.info("default server URL=" + serverUrl);
+		            LOGGER.info("default proxy server URL=" + proxyUrl);
+            }
+
+            if (null == xlReleaseServer) {
                 synchronized (this) {
-                    xlReleaseServerConnector = xlReleaseServerFactory.newInstance(xlReleaseServerUrl, xlReleaseClientProxyUrl, credential);
-                    credentialServerMap.put(credential.getKey(), xlReleaseServerConnector);
+                	LOGGER.info("XLReleaseServerConnector not found in the HashMap....create a new instance using key for username=" + credential.getUsername()+ ", server url=" + _serverUrl);
+                    xlReleaseServer = xlReleaseServerFactory.newInstance(_serverUrl, _proxyUrl, credential);
+                    credentialServerMap.put(credKey, xlReleaseServer);
                 }
             }
         }
-        return xlReleaseServerConnector;
-    }
+        // no credential - no server
+        return xlReleaseServer;
 
-
-
-    public static void setXLReleaseServerFactory(XLReleaseServerFactory xlReleaseServerFactory){
-        XLReleaseServerConnectorFactory.xlReleaseServerFactory=xlReleaseServerFactory;
     }
 
 }

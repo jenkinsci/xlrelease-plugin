@@ -24,7 +24,6 @@
 package com.xebialabs.xlrelease.ci;
 
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -52,7 +51,6 @@ public class XLReleaseNotifierFormTest {
     }
 
     @Test
-    @Ignore
     @LocalData
     public void testXLReleaseForm() throws Exception {
         FreeStyleProject p = j.createFreeStyleProject();

@@ -32,10 +32,13 @@ import com.cloudbees.plugins.credentials.common.StandardUsernamePasswordCredenti
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.xebialabs.xlrelease.ci.Credential;
+import java.util.logging.Logger;
 import hudson.util.Secret;
 
 
+
 public class XLReleaseServerFactory {
+    private final static Logger LOGGER = Logger.getLogger(XLReleaseServerFactory.class.getName());
 
     public boolean validConnection(String serverUrl, String proxyUrl, String username, String password) throws IllegalStateException {
         newInstance(serverUrl, proxyUrl, username, password).testConnection();  //throws IllegalStateException on failure.
@@ -48,17 +51,29 @@ public class XLReleaseServerFactory {
 
     public XLReleaseServerConnector newInstance(String serverUrl, String proxyUrl, Credential credential) {
         String userName = credential.getUsername();
-        String password = credential.getPassword().getPlainText();
-        if (credential.isUseGlobalCredential()) {
+        String password = (credential.getPassword() != null ? credential.getPassword().getPlainText() : "" );
+
+        if ( credential.isUseGlobalCredential() )
+        {
+            LOGGER.info("Performing lookup for system credentials");
             StandardUsernamePasswordCredentials cred =  Credential.lookupSystemCredentials(credential.getCredentialsId());
+            if (cred == null) {
+                throw new IllegalArgumentException(String.format("Credentials for '%s' not found.", credential.getCredentialsId()));
+            }
             userName =  cred.getUsername();
-            password = cred.getPassword().getPlainText();
+            password = ( cred.getPassword() != null ? cred.getPassword().getPlainText() : "" );
+
+        }
+
+        if ( userName == null )
+        {
+            throw new IllegalArgumentException("user name cannot be null");
         }
 
         XLReleaseServerConnectorFacade server = new XLReleaseServerConnectorFacade(serverUrl, proxyUrl, userName, password);
+
         return newProxy(XLReleaseServerConnector.class, new PluginFirstClassloaderInvocationHandler(server));
     }
-
 
     public static String getNameFromId(String id) {
         String[] nameParts = id.split("/");
@@ -98,4 +113,6 @@ public class XLReleaseServerFactory {
             throw new IllegalArgumentException();
         }
     }
+
+
 }
