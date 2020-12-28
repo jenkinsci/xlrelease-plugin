@@ -1,5 +1,5 @@
 The XL Release Plugin allows Jenkins to create and optionally trigger
-releases in XebiaLabs XL Releaseby adding one post-build action to your
+releases in XebiaLabs XL Release by adding one post-build action to your
 Jenkins installation:
 
 -   Release with XL Release
@@ -8,7 +8,7 @@ Jenkins installation:
 
 If instead you are looking to trigger Jenkins from XL Release, you want
 to look at the XL Release Jenkins
-task: <https://docs.xebialabs.com/xl-release/how-to/create-a-jenkins-task.html>
+task: <https://docs.xebialabs.com/release/how-to/create-a-jenkins-task>
 
 # Requirements
 
@@ -27,4 +27,4 @@ For older versions of XL Release, use [Jenkins plugin version
 
 For information about configuring and using the plugin, as well as
 release notes, visit the [XebiaLabs documentation
-site](https://docs.xebialabs.com/xl-release/how-to/using-the-xl-release-plugin-for-jenkins.html#plugin-configuration-in-jenkins).
+site](https://docs.xebialabs.com/release/how-to/using-the-xl-release-plugin-for-jenkins.html#plugin-configuration-in-jenkins).
