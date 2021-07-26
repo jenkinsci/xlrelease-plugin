@@ -1,17 +1,14 @@
 package com.xebialabs.xlrelease.ci.workflow;
 
 import com.google.inject.Inject;
-import com.xebialabs.xlrelease.ci.Credential;
+import com.xebialabs.xlrelease.ci.*;
 import com.xebialabs.xlrelease.ci.Messages;
-import com.xebialabs.xlrelease.ci.NameValuePair;
-import com.xebialabs.xlrelease.ci.XLReleaseNotifier;
+import com.xebialabs.xlrelease.ci.server.XLReleaseServerConnector;
 import com.xebialabs.xlrelease.ci.util.JenkinsReleaseListener;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.Util;
-import hudson.model.AbstractProject;
-import hudson.model.AutoCompletionCandidates;
-import hudson.model.TaskListener;
+import hudson.model.*;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import hudson.util.Secret;
@@ -98,30 +95,30 @@ public class XLReleaseStep extends AbstractStepImpl {
             return "Create and invoke a XLR release";
         }
 
-        public AutoCompletionCandidates doAutoCompleteTemplate(@QueryParameter final String value) {
-            return getXLReleaseDescriptor().doAutoCompleteTemplate(value);
-        }
-
-        public FormValidation doValidateTemplate(@QueryParameter String serverCredentials, @QueryParameter boolean overridingCredential, @QueryParameter final String template, @AncestorInPath AbstractProject project) {
-            return getXLReleaseDescriptor().doValidateTemplate(serverCredentials, overridingCredential, template, project);
-        }
+//        public AutoCompletionCandidates doAutoCompleteTemplate(@QueryParameter final String value) {
+//            return getXLReleaseDescriptor().doAutoCompleteTemplate(value);
+//        }
+//
+//        public FormValidation doValidateTemplate(@QueryParameter String serverCredentials, @QueryParameter boolean overridingCredential, @QueryParameter final String template, @AncestorInPath AbstractProject project) {
+//            return getXLReleaseDescriptor().doValidateTemplate(serverCredentials, overridingCredential, template, project);
+//        }
 
         public ListBoxModel doFillServerCredentialsItems() {
             return getXLReleaseDescriptor().doFillCredentialItems();
         }
 
-        public Map<String, String> getVariablesOf(final String credential, final String template) {
-            return getXLReleaseDescriptor().getVariablesOf(credential, null, template);
-        }
-
-        public FormValidation doCheckServerCredentials(@QueryParameter String serverCredentials) {
-            return getXLReleaseDescriptor().doCheckCredential(serverCredentials);
-        }
-
-        public int getNumberOfVariables(@QueryParameter String serverCredentials,@QueryParameter boolean overridingCredential, @QueryParameter String username
-                , @QueryParameter String password, @QueryParameter boolean useGlobalCredential, @QueryParameter String credentialsId, @QueryParameter String template) {
-            return getXLReleaseDescriptor().getNumberOfVariables(serverCredentials, overridingCredential, username, password, useGlobalCredential, credentialsId ,template);
-        }
+//        public Map<String, String> getVariablesOf(final String credential, final String template) {
+//            return getXLReleaseDescriptor().getVariablesOf(credential, null, template);
+//        }
+//
+//        public FormValidation doCheckServerCredentials(@QueryParameter String serverCredentials) {
+//            return getXLReleaseDescriptor().doCheckCredential(serverCredentials);
+//        }
+//
+//        public int getNumberOfVariables(@QueryParameter String serverCredentials,@QueryParameter boolean overridingCredential, @QueryParameter String username
+//                , @QueryParameter String password, @QueryParameter boolean useGlobalCredential, @QueryParameter String credentialsId, @QueryParameter String template) {
+//            return getXLReleaseDescriptor().getNumberOfVariables(serverCredentials, overridingCredential, username, password, useGlobalCredential, credentialsId ,template);
+//        }
 
         private XLReleaseDescriptor getXLReleaseDescriptor() {
             descriptor.load();
@@ -140,23 +137,30 @@ public class XLReleaseStep extends AbstractStepImpl {
         @StepContextParameter
         private transient TaskListener listener;
 
+        @StepContextParameter
+        private transient Run<?,?> run;
+
         @Override
         protected Void run() throws Exception {
             if (StringUtils.isNotEmpty(step.version)) {
                 JenkinsReleaseListener deploymentListener = new JenkinsReleaseListener(listener);
                 deploymentListener.info(Messages._XLReleaseStep_versionDeprecated());
             }
-            XLReleaseNotifier releaseNotifier = new XLReleaseNotifier(step.serverCredentials, step.template, (step.releaseTitle != null) ? step.releaseTitle : step.version, step.variables, step.startRelease, getOverridingCredential());
-            releaseNotifier.executeRelease(envVars, listener);
+            Job<?,?> job = this.run.getParent();
+            XLReleaseServerConnector xlrServer = RepositoryUtils.getXLreleaseServerFromCredentialsId(
+                    step.serverCredentials, step.overrideCredentialId, job);
+
+//            XLReleaseNotifier releaseNotifier = new XLReleaseNotifier(step.serverCredentials, step.template, (step.releaseTitle != null) ? step.releaseTitle : step.version, step.variables, step.startRelease, getOverridingCredential());
+//            releaseNotifier.executeRelease(envVars, listener);
             return null;
         }
 
-        private Credential getOverridingCredential() {
-            if (StringUtils.isNotEmpty(step.overrideCredentialId)) {
-                Credential credential =  new Credential("Overriding", "", Secret.fromString(""), step.overrideCredentialId, true, null);
-                return  credential;
-            }
-            return null;
-        }
+//        private Credential getOverridingCredential() {
+//            if (StringUtils.isNotEmpty(step.overrideCredentialId)) {
+//                Credential credential =  new Credential("Overriding", "", Secret.fromString(""), step.overrideCredentialId, true, null);
+//                return  credential;
+//            }
+//            return null;
+//        }
     }
 }

@@ -34,6 +34,7 @@ import com.xebialabs.xlrelease.ci.server.XLReleaseServerFactory;
 import hudson.Extension;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
+import hudson.model.ItemGroup;
 import hudson.model.Project;
 import hudson.security.ACL;
 import hudson.util.FormValidation;
@@ -48,6 +49,8 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import static com.cloudbees.plugins.credentials.CredentialsProvider.lookupCredentials;
 import static hudson.util.FormValidation.error;
@@ -57,6 +60,7 @@ public class Credential extends AbstractDescribableImpl<Credential> {
 
     private static final SchemeRequirement HTTP_SCHEME = new SchemeRequirement("http");
     private static final SchemeRequirement HTTPS_SCHEME = new SchemeRequirement("https");
+    private static final Logger LOGGER = Logger.getLogger(Credential.class.getName());
 
     public static final Function<Credential, String> CREDENTIAL_INDEX = new Function<Credential, String>() {
         public String apply(Credential input) {
@@ -144,6 +148,14 @@ public class Credential extends AbstractDescribableImpl<Credential> {
         return useGlobalCredential;
     }
 
+    public ListBoxModel doFillCredentialsIdItems(@AncestorInPath Project context) {
+        List<StandardUsernamePasswordCredentials> creds = lookupCredentials(StandardUsernamePasswordCredentials.class, context,
+                ACL.SYSTEM,
+                HTTP_SCHEME, HTTPS_SCHEME);
+
+        return new StandardUsernameListBoxModel().withAll(creds);
+    }
+
     @Override
     public String toString() {
         return name;
@@ -174,20 +186,74 @@ public class Credential extends AbstractDescribableImpl<Credential> {
         return result;
     }
 
-    public static StandardUsernamePasswordCredentials lookupSystemCredentials(String credentialsId) {
-        if ( credentialsId == null )
-        {
-            return null;
+    public static class SecondaryServerInfo {
+        public final String secondaryServerUrl;
+        public final String secondaryProxyUrl;
+
+        @DataBoundConstructor
+        public SecondaryServerInfo(String secondaryServerUrl, String secondaryProxyUrl) {
+            this.secondaryServerUrl = secondaryServerUrl;
+            this.secondaryProxyUrl = secondaryProxyUrl;
         }
 
-        return CredentialsMatchers.firstOrNull(
-                lookupCredentials(StandardUsernamePasswordCredentials.class, 
-                    Jenkins.getInstanceOrNull(), 
-                    ACL.SYSTEM,
-                    HTTP_SCHEME, 
-                    HTTPS_SCHEME),
-                CredentialsMatchers.withId(credentialsId)
-        );
+        public boolean showSecondaryServerSettings() {
+            return !Strings.isNullOrEmpty(secondaryServerUrl) || !Strings.isNullOrEmpty(secondaryProxyUrl);
+        }
+
+        public String resolveServerUrl(String defaultUrl) {
+            if (!Strings.isNullOrEmpty(secondaryServerUrl)) {
+                return secondaryServerUrl;
+            }
+            return defaultUrl;
+        }
+
+        public String resolveProxyUrl(String defaultUrl) {
+            if (!Strings.isNullOrEmpty(secondaryProxyUrl)) {
+                return secondaryProxyUrl;
+            }
+            return defaultUrl;
+        }
+
+        @Override
+        public boolean equals(final Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            final SecondaryServerInfo that = (SecondaryServerInfo) o;
+
+            if (secondaryProxyUrl == null && that.secondaryProxyUrl != null) return false;
+            if (secondaryProxyUrl != null && !secondaryProxyUrl.equals(that.secondaryProxyUrl)) return false;
+            if (secondaryServerUrl == null && that.secondaryServerUrl != null) return false;
+            if (secondaryServerUrl != null && !secondaryServerUrl.equals(that.secondaryServerUrl)) return false;
+
+            return true;
+        }
+
+        @Override
+        public int hashCode() {
+            int result = secondaryServerUrl != null ? secondaryServerUrl.hashCode() : 0;
+            result = 31 * result + (secondaryProxyUrl != null ? secondaryProxyUrl.hashCode() : 0);
+            return result;
+        }
+    }
+
+    public static StandardUsernamePasswordCredentials lookupSystemCredentials(String credentialsId, ItemGroup<?> item) {
+        StandardUsernamePasswordCredentials result = null;
+
+        List<StandardUsernamePasswordCredentials> creds = lookupCredentials(StandardUsernamePasswordCredentials.class, item, ACL.SYSTEM, HTTP_SCHEME, HTTPS_SCHEME);
+        if (LOGGER.isLoggable(Level.FINE)) {
+            LOGGER.fine(String.format("[XLR] lookup credentials for '%s' in context '%s'. Found '%s'", credentialsId, item.getFullName(), creds.isEmpty() ? "nothing" : Integer.toString(creds.size()) + " items"));
+            for (StandardUsernamePasswordCredentials cred : creds) {
+                LOGGER.fine(String.format("[XLR]  >> id:%s, name:%s", cred.getId(), cred.getUsername()));
+            }
+            LOGGER.fine("[XLR] ------------------ end creds list");
+        }
+        if (creds.size() > 0) {
+            result = CredentialsMatchers.firstOrNull(creds, CredentialsMatchers.withId(credentialsId));
+            LOGGER.fine(String.format("[XLD] using credentails '%s'", result.getId()));
+        }
+
+        return result;
     }
 
     @Extension
@@ -215,6 +281,13 @@ public class Credential extends AbstractDescribableImpl<Credential> {
 
         public FormValidation doCheckSecondaryProxyUrl(@QueryParameter String secondaryProxyUrl) {
             return validateOptionalUrl(secondaryProxyUrl);
+        }
+
+        public static Credential fromStapler(@QueryParameter String name, @QueryParameter String username, @QueryParameter Secret password,
+                                             @QueryParameter String deployitServerUrl, @QueryParameter String deployitClientProxyUrl,
+                                             @QueryParameter String secondaryServerUrl, @QueryParameter String secondaryProxyUrl, @QueryParameter String credentialsId, @QueryParameter boolean useGlobalCredential) {
+
+            return new Credential(name, username, password, credentialsId, useGlobalCredential, new SecondaryServerInfo(secondaryServerUrl, secondaryProxyUrl));
         }
 
         public ListBoxModel doFillCredentialsIdItems(@AncestorInPath Project context) {
@@ -270,6 +343,21 @@ public class Credential extends AbstractDescribableImpl<Credential> {
                 e.printStackTrace();
                 return FormValidation.error("XL Release configuration is not valid! %s", e.getMessage());
             }
+        }
+
+        public static StandardUsernamePasswordCredentials lookupSystemCredentials(String credentialsId) {
+            if (credentialsId == null) {
+                return null;
+            }
+
+            return CredentialsMatchers.firstOrNull(
+                    lookupCredentials(StandardUsernamePasswordCredentials.class,
+                            Jenkins.getInstance(),
+                            ACL.SYSTEM,
+                            HTTP_SCHEME,
+                            HTTPS_SCHEME),
+                    CredentialsMatchers.withId(credentialsId)
+            );
         }
 
         private XLReleaseServerConnector validateConnection(String serverUrl, String proxyUrl, String username, String password) throws Exception {

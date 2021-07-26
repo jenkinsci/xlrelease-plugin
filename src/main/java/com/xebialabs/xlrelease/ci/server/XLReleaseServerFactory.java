@@ -56,7 +56,7 @@ public class XLReleaseServerFactory {
         if ( credential.isUseGlobalCredential() )
         {
             LOGGER.info("Performing lookup for system credentials");
-            StandardUsernamePasswordCredentials cred =  Credential.lookupSystemCredentials(credential.getCredentialsId());
+            StandardUsernamePasswordCredentials cred =  Credential.CredentialDescriptor.lookupSystemCredentials(credential.getCredentialsId());
             if (cred == null) {
                 throw new IllegalArgumentException(String.format("Credentials for '%s' not found.", credential.getCredentialsId()));
             }

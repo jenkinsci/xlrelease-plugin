@@ -2,6 +2,7 @@ package com.xebialabs.xlrelease.ci.server;
 
 import com.xebialabs.xlrelease.ci.Credential;
 
+import java.lang.ref.SoftReference;
 import java.util.Map;
 import java.util.logging.Logger;
 
