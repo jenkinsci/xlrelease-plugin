@@ -109,12 +109,12 @@ public class XLReleaseNotifier extends Notifier {
         }
 
         XLReleaseDescriptor descriptor = RepositoryUtils.getXLreleaseDescriptor();
-        XLReleaseServerConnector xlrServer = descriptor.getXLReleaseServer(credential, build.getProject());
+        XLReleaseServerConnector xlReleaseServerConnector = descriptor.getXLReleaseServer(credential, build.getProject());
 
-        return executeRelease(build.getEnvironment(listener),listener, xlrServer);
+        return executeRelease(build.getEnvironment(listener),listener, xlReleaseServerConnector);
     }
 
-    public boolean executeRelease (EnvVars envVars, TaskListener listener, XLReleaseServerConnector xlrServer) {
+    public boolean executeRelease (EnvVars envVars, TaskListener listener, XLReleaseServerConnector xlReleaseServerConnector) {
         final JenkinsReleaseListener deploymentListener = new JenkinsReleaseListener(listener);
 
         String resolvedVersion = envVars.expand(version);
@@ -126,29 +126,29 @@ public class XLReleaseNotifier extends Notifier {
         }
 
         // createRelease
-        Release release = createRelease(template, resolvedVersion, resolvedVariables, xlrServer);
+        Release release = createRelease(template, resolvedVersion, resolvedVariables, xlReleaseServerConnector);
         deploymentListener.info(Messages.XLReleaseNotifier_createRelease(template, resolvedVersion, release.getId()));
 
         // startRelease
         if (startRelease) {
             deploymentListener.info(Messages.XLReleaseNotifier_startRelease(template, resolvedVersion, release.getId()));
-            startRelease(release, xlrServer);
+            startRelease(release, xlReleaseServerConnector);
         }
-        String releaseUrl = xlrServer.getServerURL() + release.getReleaseURL();
+        String releaseUrl = xlReleaseServerConnector.getServerURL() + release.getReleaseURL();
         deploymentListener.info(Messages.XLReleaseNotifier_releaseLink(releaseUrl));
         return true;
 
     }
 
-    private Release createRelease(final String resolvedTemplate, final String resolvedVersion, final List<NameValuePair> resolvedVariables, XLReleaseServerConnector xlrServer) {
+    private Release createRelease(final String resolvedTemplate, final String resolvedVersion, final List<NameValuePair> resolvedVariables, XLReleaseServerConnector xlReleaseServerConnector) {
         // create a new release instance
-        Release release = xlrServer.createRelease(resolvedTemplate, resolvedVersion, resolvedVariables);
+        Release release = xlReleaseServerConnector.createRelease(resolvedTemplate, resolvedVersion, resolvedVariables);
         return release;
     }
 
-    private void startRelease(final Release release, XLReleaseServerConnector xlrServer) {
+    private void startRelease(final Release release, XLReleaseServerConnector xlReleaseServerConnector) {
         // start the release
-        xlrServer.startRelease(release.getInternalId());
+        xlReleaseServerConnector.startRelease(release.getInternalId());
     }
 
     @Override
@@ -213,23 +213,23 @@ public class XLReleaseNotifier extends Notifier {
         }
 
         public XLReleaseServerConnector getXLReleaseServer(Credential credential, Job<?, ?> project) {
-            XLReleaseServerConnector xlrServer = null;
+            XLReleaseServerConnector xlReleaseServerConnector = null;
             if (null != credential) {
                 SoftReference<XLReleaseServerConnector> xlreleaseServerRef = credentialServerMap.get(credential.getKey());
 
                 if (null != xlreleaseServerRef) {
-                    xlrServer = xlreleaseServerRef.get();
+                    xlReleaseServerConnector = xlreleaseServerRef.get();
                 }
 
-                if (null == xlrServer) {
+                if (null == xlReleaseServerConnector) {
                     synchronized (this) {
-                        xlrServer = newXLreleaseServer(credential, project.getParent());
-                        credentialServerMap.put(credential.getKey(), new SoftReference<XLReleaseServerConnector>(xlrServer));
+                        xlReleaseServerConnector = newXLreleaseServer(credential, project.getParent());
+                        credentialServerMap.put(credential.getKey(), new SoftReference<XLReleaseServerConnector>(xlReleaseServerConnector));
                     }
                 }
             }
             // no credential - no server
-            return xlrServer;
+            return xlReleaseServerConnector;
         }
 
         @Override

@@ -283,13 +283,6 @@ public class Credential extends AbstractDescribableImpl<Credential> {
             return validateOptionalUrl(secondaryProxyUrl);
         }
 
-        public static Credential fromStapler(@QueryParameter String name, @QueryParameter String username, @QueryParameter Secret password,
-                                             @QueryParameter String deployitServerUrl, @QueryParameter String deployitClientProxyUrl,
-                                             @QueryParameter String secondaryServerUrl, @QueryParameter String secondaryProxyUrl, @QueryParameter String credentialsId, @QueryParameter boolean useGlobalCredential) {
-
-            return new Credential(name, username, password, credentialsId, useGlobalCredential, new SecondaryServerInfo(secondaryServerUrl, secondaryProxyUrl));
-        }
-
         public ListBoxModel doFillCredentialsIdItems(@AncestorInPath Project context) {
             // TODO: also add requirement on host derived from URL ?
             List<StandardUsernamePasswordCredentials> creds = lookupCredentials(StandardUsernamePasswordCredentials.class, context,
