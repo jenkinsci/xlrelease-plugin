@@ -250,7 +250,7 @@ public class Credential extends AbstractDescribableImpl<Credential> {
         }
         if (creds.size() > 0) {
             result = CredentialsMatchers.firstOrNull(creds, CredentialsMatchers.withId(credentialsId));
-            LOGGER.fine(String.format("[XLD] using credentails '%s'", result.getId()));
+            LOGGER.fine(String.format("[XLR] using credentails '%s'", result.getId()));
         }
 
         return result;
