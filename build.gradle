@@ -43,7 +43,7 @@ repositories {
 }
 
 jenkinsPlugin {
-    coreVersion = '2.150.1' // we need to support LTS versions
+    coreVersion = '2.277.3' // we need to support LTS versions
     displayName = "XebiaLabs XL Release Plugin"
     url = 'https://github.com/jenkinsci/xlrelease-plugin/blob/master/docs/README.md'
     gitHubUrl = 'https://github.com/jenkinsci/xlrelease-plugin'

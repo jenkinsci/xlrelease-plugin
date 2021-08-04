@@ -1,17 +1,14 @@
 package com.xebialabs.xlrelease.ci.workflow;
 
 import com.google.inject.Inject;
-import com.xebialabs.xlrelease.ci.Credential;
+import com.xebialabs.xlrelease.ci.*;
 import com.xebialabs.xlrelease.ci.Messages;
-import com.xebialabs.xlrelease.ci.NameValuePair;
-import com.xebialabs.xlrelease.ci.XLReleaseNotifier;
+import com.xebialabs.xlrelease.ci.server.XLReleaseServerConnector;
 import com.xebialabs.xlrelease.ci.util.JenkinsReleaseListener;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.Util;
-import hudson.model.AbstractProject;
-import hudson.model.AutoCompletionCandidates;
-import hudson.model.TaskListener;
+import hudson.model.*;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import hudson.util.Secret;
@@ -98,8 +95,8 @@ public class XLReleaseStep extends AbstractStepImpl {
             return "Create and invoke a XLR release";
         }
 
-        public AutoCompletionCandidates doAutoCompleteTemplate(@QueryParameter final String value) {
-            return getXLReleaseDescriptor().doAutoCompleteTemplate(value);
+        public AutoCompletionCandidates doAutoCompleteTemplate(@QueryParameter final String value, @AncestorInPath AbstractProject project) {
+            return getXLReleaseDescriptor().doAutoCompleteTemplate(value, project);
         }
 
         public FormValidation doValidateTemplate(@QueryParameter String serverCredentials, @QueryParameter boolean overridingCredential, @QueryParameter final String template, @AncestorInPath AbstractProject project) {
@@ -140,23 +137,21 @@ public class XLReleaseStep extends AbstractStepImpl {
         @StepContextParameter
         private transient TaskListener listener;
 
+        @StepContextParameter
+        private transient Run<?,?> run;
+
         @Override
         protected Void run() throws Exception {
             if (StringUtils.isNotEmpty(step.version)) {
                 JenkinsReleaseListener deploymentListener = new JenkinsReleaseListener(listener);
                 deploymentListener.info(Messages._XLReleaseStep_versionDeprecated());
             }
-            XLReleaseNotifier releaseNotifier = new XLReleaseNotifier(step.serverCredentials, step.template, (step.releaseTitle != null) ? step.releaseTitle : step.version, step.variables, step.startRelease, getOverridingCredential());
-            releaseNotifier.executeRelease(envVars, listener);
+            Job<?,?> job = this.run.getParent();
+            XLReleaseServerConnector xlReleaseServerConnector = RepositoryUtils.getXLreleaseServerFromCredentialsId(
+                    step.serverCredentials, step.overrideCredentialId, job);
+
             return null;
         }
 
-        private Credential getOverridingCredential() {
-            if (StringUtils.isNotEmpty(step.overrideCredentialId)) {
-                Credential credential =  new Credential("Overriding", "", Secret.fromString(""), step.overrideCredentialId, true, null);
-                return  credential;
-            }
-            return null;
-        }
     }
 }
