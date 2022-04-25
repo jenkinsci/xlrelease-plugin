@@ -147,7 +147,6 @@ public class XLReleaseStep extends AbstractStepImpl {
                 deploymentListener.info(Messages._XLReleaseStep_versionDeprecated());
             }
             Job<?,?> job = this.run.getParent();
-            //Credential
             XLReleaseNotifier releaseNotifier = new XLReleaseNotifier(step.serverCredentials, step.template, (step.releaseTitle != null) ? step.releaseTitle : step.version, step.variables, step.startRelease, getOverridingCredential());
             XLReleaseServerConnector xlReleaseServerConnector = RepositoryUtils.getXLreleaseServerFromCredentialsId(
                     step.serverCredentials, step.overrideCredentialId, job);
