@@ -147,11 +147,19 @@ public class XLReleaseStep extends AbstractStepImpl {
                 deploymentListener.info(Messages._XLReleaseStep_versionDeprecated());
             }
             Job<?,?> job = this.run.getParent();
+            XLReleaseNotifier releaseNotifier = new XLReleaseNotifier(step.serverCredentials, step.template, (step.releaseTitle != null) ? step.releaseTitle : step.version, step.variables, step.startRelease, getOverridingCredential());
             XLReleaseServerConnector xlReleaseServerConnector = RepositoryUtils.getXLreleaseServerFromCredentialsId(
                     step.serverCredentials, step.overrideCredentialId, job);
-
+            releaseNotifier.executeRelease(envVars, listener,xlReleaseServerConnector);
             return null;
         }
 
+        private Credential getOverridingCredential() {
+            if (StringUtils.isNotEmpty(step.overrideCredentialId)) {
+                Credential credential =  new Credential("Overriding", "", Secret.fromString(""), step.overrideCredentialId, true, null);
+                return  credential;
+            } else
+                return null;
+
     }
-}
+}}
