@@ -2,7 +2,7 @@
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:c="/lib/credentials" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
 
     <f:entry title="${%Credential}" field="credential" help="/plugin/xlrelease-plugin/help-credential.html">
-        <f:select/>
+        <f:select checkMethod="post"/>
     </f:entry>
 
     <f:block>

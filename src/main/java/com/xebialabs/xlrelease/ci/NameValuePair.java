@@ -27,8 +27,11 @@ package com.xebialabs.xlrelease.ci;
 import java.util.Map;
 
 import com.xebialabs.xlrelease.ci.util.TemplateVariable;
+import hudson.model.Item;
+import hudson.util.FormValidation;
 import hudson.util.Secret;
 import org.apache.commons.lang.StringUtils;
+import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
@@ -40,6 +43,7 @@ import hudson.model.AbstractDescribableImpl;
 import hudson.model.Descriptor;
 import hudson.util.ListBoxModel;
 import jenkins.model.Jenkins;
+import org.kohsuke.stapler.verb.POST;
 
 import static com.xebialabs.xlrelease.ci.XLReleaseNotifier.XLReleaseDescriptor;
 import static com.xebialabs.xlrelease.ci.util.ListBoxModels.emptyModel;
@@ -65,6 +69,7 @@ public class NameValuePair extends AbstractDescribableImpl<NameValuePair> {
 
     @Extension
     public static final class NameValuePairDescriptor extends Descriptor<NameValuePair> {
+
         @Override
         public String getDisplayName() {
             return "NameValuePair";
@@ -72,7 +77,11 @@ public class NameValuePair extends AbstractDescribableImpl<NameValuePair> {
 
         public ListBoxModel doFillPropertyNameItems(@QueryParameter @RelativePath(value = "..") String credential, @QueryParameter @RelativePath(value = "..") String serverCredentials,
                 @QueryParameter @RelativePath(value = "..") String template,@QueryParameter @RelativePath(value = "..") boolean overridingCredential, @QueryParameter @RelativePath(value = "../overridingCredential") String username
-                , @QueryParameter @RelativePath(value = "../overridingCredential") String password, @QueryParameter @RelativePath(value = "../overridingCredential") boolean useGlobalCredential, @QueryParameter @RelativePath(value = "../overridingCredential") String credentialsId) {
+                , @QueryParameter @RelativePath(value = "../overridingCredential") String password, @QueryParameter @RelativePath(value = "../overridingCredential") boolean useGlobalCredential, @QueryParameter @RelativePath(value = "../overridingCredential") String credentialsId, @AncestorInPath Item item) {
+            if (item == null) {
+                return ListBoxModels.emptyModel();
+            }
+            item.checkPermission(Item.CONFIGURE);
             if (StringUtils.isEmpty(credential))
                 credential = serverCredentials;
             Credential overridingCredentialTemp=null;

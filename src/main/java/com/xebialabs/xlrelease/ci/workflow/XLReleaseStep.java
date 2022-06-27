@@ -5,6 +5,7 @@ import com.xebialabs.xlrelease.ci.*;
 import com.xebialabs.xlrelease.ci.Messages;
 import com.xebialabs.xlrelease.ci.server.XLReleaseServerConnector;
 import com.xebialabs.xlrelease.ci.util.JenkinsReleaseListener;
+import com.xebialabs.xlrelease.ci.util.ListBoxModels;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.Util;
@@ -13,6 +14,7 @@ import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import hudson.util.Secret;
 
+import jenkins.model.Jenkins;
 import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.workflow.steps.AbstractStepDescriptorImpl;
 import org.jenkinsci.plugins.workflow.steps.AbstractStepImpl;
@@ -23,6 +25,7 @@ import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.verb.POST;
 
 import java.util.List;
 import java.util.Map;
@@ -95,24 +98,27 @@ public class XLReleaseStep extends AbstractStepImpl {
             return "Create and invoke a XLR release";
         }
 
-        public AutoCompletionCandidates doAutoCompleteTemplate(@QueryParameter final String value, @AncestorInPath AbstractProject project) {
-            return getXLReleaseDescriptor().doAutoCompleteTemplate(value, project);
+        public AutoCompletionCandidates doAutoCompleteTemplate(@QueryParameter final String value, @AncestorInPath AbstractProject project, @AncestorInPath Item item) {
+            return getXLReleaseDescriptor().doAutoCompleteTemplate(value, project,item);
         }
-
-        public FormValidation doValidateTemplate(@QueryParameter String serverCredentials, @QueryParameter boolean overridingCredential, @QueryParameter final String template, @AncestorInPath AbstractProject project) {
-            return getXLReleaseDescriptor().doValidateTemplate(serverCredentials, overridingCredential, template, project);
+        @POST
+        public FormValidation doValidateTemplate(@QueryParameter String serverCredentials, @QueryParameter boolean overridingCredential, @QueryParameter final String template, @AncestorInPath AbstractProject project, @AncestorInPath Item item) {
+            return getXLReleaseDescriptor().doValidateTemplate(serverCredentials, overridingCredential, template, project,item);
         }
-
-        public ListBoxModel doFillServerCredentialsItems() {
-            return getXLReleaseDescriptor().doFillCredentialItems();
+        public ListBoxModel doFillServerCredentialsItems(@AncestorInPath Item item) {
+            if (item == null) {
+                return ListBoxModels.emptyModel();
+            }
+            item.checkPermission(Item.CONFIGURE);
+            return getXLReleaseDescriptor().doFillCredentialItems(item);
         }
 
         public Map<String, String> getVariablesOf(final String credential, final String template) {
             return getXLReleaseDescriptor().getVariablesOf(credential, null, template);
         }
 
-        public FormValidation doCheckServerCredentials(@QueryParameter String serverCredentials) {
-            return getXLReleaseDescriptor().doCheckCredential(serverCredentials);
+        public FormValidation doCheckServerCredentials(@QueryParameter String serverCredentials, @AncestorInPath Item item) {
+            return getXLReleaseDescriptor().doCheckCredential(serverCredentials,item);
         }
 
         public int getNumberOfVariables(@QueryParameter String serverCredentials,@QueryParameter boolean overridingCredential, @QueryParameter String username

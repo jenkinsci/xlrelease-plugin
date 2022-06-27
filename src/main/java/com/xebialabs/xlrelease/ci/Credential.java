@@ -31,11 +31,9 @@ import com.google.common.base.Function;
 import com.google.common.base.Strings;
 import com.xebialabs.xlrelease.ci.server.XLReleaseServerConnector;
 import com.xebialabs.xlrelease.ci.server.XLReleaseServerFactory;
+import com.xebialabs.xlrelease.ci.util.ListBoxModels;
 import hudson.Extension;
-import hudson.model.AbstractDescribableImpl;
-import hudson.model.Descriptor;
-import hudson.model.ItemGroup;
-import hudson.model.Project;
+import hudson.model.*;
 import hudson.security.ACL;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
@@ -44,6 +42,7 @@ import jenkins.model.Jenkins;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.verb.POST;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -149,6 +148,7 @@ public class Credential extends AbstractDescribableImpl<Credential> {
     }
 
     public ListBoxModel doFillCredentialsIdItems(@AncestorInPath Project context) {
+        Jenkins.get().checkPermission(Jenkins.ADMINISTER);
         List<StandardUsernamePasswordCredentials> creds = lookupCredentials(StandardUsernamePasswordCredentials.class, context,
                 ACL.SYSTEM,
                 HTTP_SCHEME, HTTPS_SCHEME);
@@ -285,15 +285,17 @@ public class Credential extends AbstractDescribableImpl<Credential> {
 
         public ListBoxModel doFillCredentialsIdItems(@AncestorInPath Project context) {
             // TODO: also add requirement on host derived from URL ?
+            Jenkins.get().checkPermission(Jenkins.ADMINISTER);
             List<StandardUsernamePasswordCredentials> creds = lookupCredentials(StandardUsernamePasswordCredentials.class, context,
                     ACL.SYSTEM,
                     HTTP_SCHEME, HTTPS_SCHEME);
 
             return new StandardUsernameListBoxModel().withAll(creds);
         }
-
+        @POST
         public FormValidation doValidateUserNamePassword(@QueryParameter String xlReleaseServerUrl, @QueryParameter String xlReleaseClientProxyUrl, @QueryParameter String username,
                                                          @QueryParameter Secret password, @QueryParameter String secondaryServerUrl, @QueryParameter String secondaryProxyUrl) throws IOException {
+            Jenkins.get().checkPermission(Jenkins.ADMINISTER);
             try {
                 String serverUrl = Strings.isNullOrEmpty(secondaryServerUrl) ? xlReleaseServerUrl : secondaryServerUrl;
                 String proxyUrl = Strings.isNullOrEmpty(secondaryProxyUrl) ? xlReleaseClientProxyUrl : secondaryProxyUrl;
@@ -311,8 +313,9 @@ public class Credential extends AbstractDescribableImpl<Credential> {
                 return FormValidation.error("XL Release configuration is not valid! %s", e.getMessage());
             }
         }
-
+        @POST
         public FormValidation doValidateCredential(@QueryParameter String xlReleaseServerUrl, @QueryParameter String xlReleaseClientProxyUrl, @QueryParameter String secondaryServerUrl, @QueryParameter String secondaryProxyUrl, @QueryParameter String credentialsId) throws IOException {
+            Jenkins.get().checkPermission(Jenkins.ADMINISTER);
             try {
                 String serverUrl = Strings.isNullOrEmpty(secondaryServerUrl) ? xlReleaseServerUrl : secondaryServerUrl;
                 String proxyUrl = Strings.isNullOrEmpty(secondaryProxyUrl) ? xlReleaseClientProxyUrl : secondaryProxyUrl;

@@ -33,6 +33,7 @@ import com.xebialabs.xlrelease.ci.server.XLReleaseServerConnector;
 import com.xebialabs.xlrelease.ci.server.XLReleaseServerConnectorFactory;
 import com.xebialabs.xlrelease.ci.server.XLReleaseServerFactory;
 import com.xebialabs.xlrelease.ci.util.JenkinsReleaseListener;
+import com.xebialabs.xlrelease.ci.util.ListBoxModels;
 import com.xebialabs.xlrelease.ci.util.Release;
 import com.xebialabs.xlrelease.ci.util.TemplateVariable;
 import hudson.EnvVars;
@@ -47,6 +48,7 @@ import hudson.tasks.Publisher;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
 import hudson.util.Secret;
+import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
@@ -54,6 +56,7 @@ import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.verb.POST;
 
 import java.io.IOException;
 import java.lang.ref.SoftReference;
@@ -280,13 +283,17 @@ public class XLReleaseNotifier extends Notifier {
         public FormValidation doCheckXLReleaseClientProxyUrl(@QueryParameter String xlReleaseClientProxyUrl) {
             return validateOptionalUrl(xlReleaseClientProxyUrl);
         }
-
+        @POST
         public FormValidation doValidateTemplate(
             @QueryParameter String credential, 
             @QueryParameter boolean overridingCredential, 
             @QueryParameter final String template,
-            @AncestorInPath AbstractProject project) 
+            @AncestorInPath AbstractProject project, @AncestorInPath Item item)
         {
+            if (item == null) {
+                Jenkins.get().checkPermission(Jenkins.ADMINISTER);
+            }
+            item.checkPermission(Item.CONFIGURE);
             try {
                 Credential overridingCredentialTemp = null;
                 if ( overridingCredential ) 
@@ -328,8 +335,12 @@ public class XLReleaseNotifier extends Notifier {
             return TemplateVariable.toMap(variables);
         }
 
-        public AutoCompletionCandidates doAutoCompleteTemplate(@QueryParameter final String value, @AncestorInPath AbstractProject project) {
+        public AutoCompletionCandidates doAutoCompleteTemplate(@QueryParameter final String value, @AncestorInPath AbstractProject project, @AncestorInPath Item item) {
             AutoCompletionCandidates candidates = new AutoCompletionCandidates();
+            if (item == null) {
+                return candidates;
+            }
+            item.checkPermission(Item.CONFIGURE);
             XLReleaseNotifier xlReleaseNotifier = RepositoryUtils.retrieveXLreleaseNotifierFromProject(project);
             if (xlReleaseNotifier != null) {
                 Credential overridingcredential = RepositoryUtils.retrieveOverridingCredentialFromProject(project);
@@ -343,9 +354,13 @@ public class XLReleaseNotifier extends Notifier {
             }
             return candidates;
         }
-
-        public FormValidation doReloadTemplates(@QueryParameter String credential,@QueryParameter boolean overridingCredential, @AncestorInPath AbstractProject project)
+        @POST
+        public FormValidation doReloadTemplates(@QueryParameter String credential,@QueryParameter boolean overridingCredential, @AncestorInPath AbstractProject project, @AncestorInPath Item item)
         {
+            if (item == null) {
+                return FormValidation.ok();
+            }
+            item.checkPermission(Item.CONFIGURE);
             if (overridingCredential) {
                 XLReleaseNotifier notifier = (XLReleaseNotifier) project.getPublishersList().get(this);
                 this.lastOverridingCredential = notifier.overridingCredential;
@@ -379,7 +394,11 @@ public class XLReleaseNotifier extends Notifier {
             this.xlReleaseClientProxyUrl = url;
         }
 
-        public ListBoxModel doFillCredentialItems() {
+        public ListBoxModel doFillCredentialItems(@AncestorInPath Item item) {
+            if (item == null) {
+                return ListBoxModels.emptyModel();
+            }
+            item.checkPermission(Item.CONFIGURE);
             ListBoxModel m = new ListBoxModel();
             m.add("-- Please Select --","");
             for (Credential c : credentials)
@@ -387,15 +406,23 @@ public class XLReleaseNotifier extends Notifier {
             return m;
         }
 
-        public ListBoxModel doFillCredentialsIdItems(@AncestorInPath ItemGroup context) {
+        public ListBoxModel doFillCredentialsIdItems(@AncestorInPath ItemGroup context, @AncestorInPath Item item) {
+            if (item == null) {
+                return ListBoxModels.emptyModel();
+            }
+            item.checkPermission(Item.CONFIGURE);
             List<StandardUsernamePasswordCredentials> creds = lookupCredentials(StandardUsernamePasswordCredentials.class, context,
                     ACL.SYSTEM,
                     HTTP_SCHEME, HTTPS_SCHEME);
 
             return new StandardUsernameListBoxModel().withAll(creds);
         }
-
-        public FormValidation doCheckCredential(@QueryParameter String credential) {
+        @POST
+        public FormValidation doCheckCredential(@QueryParameter String credential, @AncestorInPath Item item) {
+            if (item == null) {
+                return FormValidation.ok();
+            }
+            item.checkPermission(Item.CONFIGURE);
             lastCredential = credential;
             if (StringUtils.isEmpty(credential)) {
                return error("Please select a valid credential");
